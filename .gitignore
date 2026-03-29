@@ -1,0 +1,36 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npmrc
+
+# Build Outputs
+dist/
+dist-local/
+dist-test/
+dist-scripts/
+*.tsbuildinfo
+
+# Local Execution (Phase 1.1)
+local-queue.json
+output/
+services/capture-worker/local-queue.json
+services/capture-worker/output/
+docs
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Environment Secrets (Azure Phase 2 Preparation)
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
