@@ -10,6 +10,7 @@ package-lock.json
 # Build Outputs
 dist/
 dist-local/
+dist-dev/
 dist-test/
 dist-scripts/
 *.tsbuildinfo
@@ -17,7 +18,9 @@ dist-scripts/
 # Local Execution (Phase 1.1)
 local/storage/
 services/capture-worker/local/storage/
-docs
+
+# Gemini Context
+.gemini/
 
 # IDE & OS
 .vscode/

@@ -78,10 +78,7 @@ export class LocalQueueAdapter implements QueueConsumer<CaptureJob> {
   async abandon(message: QueueMessage<CaptureJob>): Promise<void> {
     const currentReceipt = this.inFlight.get(message.id);
 
-    if (!currentReceipt || currentReceipt !== message.popReceipt) {
-      // Message might have already timed out or been completed
-      return;
-    }
+    if (!currentReceipt || currentReceipt !== message.popReceipt) return;
 
     const job = message.body;
 

@@ -10,6 +10,7 @@ export default tseslint.config(
         project: [
           './services/capture-worker/src/tsconfig.json',
           './services/capture-worker/local/tsconfig.json',
+          './services/capture-worker/dev/tsconfig.json',
           './services/capture-worker/tests/tsconfig.json',
           './services/capture-worker/scripts/tsconfig.json',
           './services/packages/shared-types/tsconfig.json'
@@ -29,6 +30,8 @@ export default tseslint.config(
     ignores: [
       '**/dist/**',
       '**/dist-local/**',
+      '**/dist-dev/**',
+      '**/dist-scripts/**',
       '**/node_modules/**',
       '**/local-queue.json',
       '**/output/**',

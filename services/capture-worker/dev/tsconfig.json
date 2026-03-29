@@ -1,13 +1,14 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../dist-local",
+    "outDir": "../dist-dev",
     "rootDir": ".."
   },
   "include": [
     ".",
     "../src",
-    "../tests/local",
+    "../scripts/dev",
+    "../tests/dev",
     "../tests/shared"
   ],
   "references": [

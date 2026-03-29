@@ -6,6 +6,9 @@
     },
     {
       "path": "./local/tsconfig.json"
+    },
+    {
+      "path": "./dev/tsconfig.json"
     }
   ]
 }
