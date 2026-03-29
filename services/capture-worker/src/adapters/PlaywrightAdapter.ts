@@ -1,8 +1,8 @@
 import { Browser, Page, chromium } from 'playwright';
 import { CaptureJob, CaptureType } from '@render-engine/shared-types';
-import { ICaptureService } from '../core/interfaces.js';
+import { CaptureService } from '../core/interfaces.js';
 
-export class PlaywrightAdapter implements ICaptureService {
+export class PlaywrightAdapter implements CaptureService {
   private browser: Browser | null = null;
 
   /**

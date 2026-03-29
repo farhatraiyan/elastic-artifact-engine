@@ -1,22 +1,22 @@
 import { CaptureJob, QueueMessage } from '@render-engine/shared-types';
 
 import {
-  ICaptureService,
-  IMetadataService,
-  IQueueConsumer,
-  IStorageService
+  CaptureService,
+  MetadataService,
+  QueueConsumer,
+  StorageService
 } from './interfaces.js';
 
 export class Worker {
   private abortController: AbortController | null = null;
-  private capture: ICaptureService;
+  private capture: CaptureService;
   private isRunning = false;
-  private metadata: IMetadataService;
-  private queue: IQueueConsumer;
-  private storage: IStorageService;
+  private metadata: MetadataService;
+  private queue: QueueConsumer<CaptureJob>;
+  private storage: StorageService;
 
-  private async processMessage(message: QueueMessage) {
-    const job = message.body as CaptureJob;
+  private async processMessage(message: QueueMessage<CaptureJob>) {
+    const job = message.body;
 
     try {
       await this.metadata.updateStatus(job.id, 'Processing');
@@ -38,10 +38,10 @@ export class Worker {
   }
 
   constructor(
-    capture: ICaptureService,
-    metadata: IMetadataService,
-    queue: IQueueConsumer,
-    storage: IStorageService
+    capture: CaptureService,
+    metadata: MetadataService,
+    queue: QueueConsumer<CaptureJob>,
+    storage: StorageService
   ) {
     this.capture = capture;
     this.metadata = metadata;

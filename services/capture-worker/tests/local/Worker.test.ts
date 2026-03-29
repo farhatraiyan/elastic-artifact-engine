@@ -2,18 +2,18 @@ import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import { Worker } from '../../src/core/Worker.js';
 import {
-  ICaptureService,
-  IMetadataService,
-  IQueueConsumer,
-  IStorageService
+  CaptureService,
+  MetadataService,
+  QueueConsumer,
+  StorageService
 } from '../../src/core/interfaces.js';
 import { CaptureJob, QueueMessage } from '@render-engine/shared-types';
 
 describe('Worker', () => {
-  let mockCapture: ICaptureService;
-  let mockMetadata: IMetadataService;
-  let mockQueue: IQueueConsumer;
-  let mockStorage: IStorageService;
+  let mockCapture: CaptureService;
+  let mockMetadata: MetadataService;
+  let mockQueue: QueueConsumer<CaptureJob>;
+  let mockStorage: StorageService;
   let worker: Worker;
 
   const sampleJob: CaptureJob = {
@@ -24,7 +24,7 @@ describe('Worker', () => {
     retryCount: 0
   };
 
-  const sampleMessage: QueueMessage = {
+  const sampleMessage: QueueMessage<CaptureJob> = {
     id: 'msg-1',
     body: sampleJob,
     popReceipt: 'receipt-1'
@@ -92,8 +92,8 @@ describe('Worker', () => {
       statusUpdates.push(status);
     };
 
-    let completedMessage: QueueMessage | null = null;
-    const completeStub = async (msg: QueueMessage) => {
+    let completedMessage: QueueMessage<CaptureJob> | null = null;
+    const completeStub = async (msg: QueueMessage<CaptureJob>) => {
       completedMessage = msg;
     };
     mockQueue.complete = completeStub;
@@ -107,7 +107,8 @@ describe('Worker', () => {
     await startPromise;
 
     assert.deepStrictEqual(statusUpdates, ['Processing', 'Completed']);
-    assert.strictEqual((completedMessage as QueueMessage | null)?.id, 'msg-1');
+    assert.ok(completedMessage);
+    assert.strictEqual((completedMessage as QueueMessage<CaptureJob>).id, 'msg-1');
   });
 
   test('should handle capture failure and update status to Failed', async () => {
@@ -120,8 +121,8 @@ describe('Worker', () => {
       throw new Error('Capture failed');
     };
 
-    let abandonedMessage: QueueMessage | null = null;
-    const abandonStub = async (msg: QueueMessage) => {
+    let abandonedMessage: QueueMessage<CaptureJob> | null = null;
+    const abandonStub = async (msg: QueueMessage<CaptureJob>) => {
       abandonedMessage = msg;
     };
     mockQueue.abandon = abandonStub;
@@ -132,6 +133,7 @@ describe('Worker', () => {
     await startPromise;
 
     assert.ok(statusUpdates.includes('Failed'));
-    assert.strictEqual((abandonedMessage as QueueMessage | null)?.id, 'msg-1');
+    assert.ok(abandonedMessage);
+    assert.strictEqual((abandonedMessage as QueueMessage<CaptureJob>).id, 'msg-1');
   });
 });

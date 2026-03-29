@@ -9,9 +9,9 @@ import {
   QueueMessage
 } from '@render-engine/shared-types';
 
-import { IQueueConsumer } from '../../src/core/interfaces.js';
+import { QueueConsumer } from '../../src/core/interfaces.js';
 
-export class LocalQueueAdapter implements IQueueConsumer {
+export class LocalQueueAdapter implements QueueConsumer<CaptureJob> {
   private inFlight = new Map<string, string>();
   private lock = new AsyncLock();
   private maxRetries: number;
@@ -24,7 +24,7 @@ export class LocalQueueAdapter implements IQueueConsumer {
     } catch { /* Ignore AbortError, let the loop handle the exit */ }
   }
 
-  private async readQueue(): Promise<QueueMessage[]> {
+  private async readQueue(): Promise<QueueMessage<unknown>[]> {
     try {
       const data = await fs.readFile(this.queuePath, 'utf-8');
 
@@ -49,7 +49,7 @@ export class LocalQueueAdapter implements IQueueConsumer {
     });
   }
 
-  private async writeQueue(queue: QueueMessage[]): Promise<void> {
+  private async writeQueue(queue: QueueMessage<unknown>[]): Promise<void> {
     const tempPath = `${this.queuePath}.${Date.now()}.${Math.random().toString(36).slice(2, 7)}.tmp`;
 
     try {
@@ -75,7 +75,7 @@ export class LocalQueueAdapter implements IQueueConsumer {
     this.pollIntervalMs = pollIntervalMs;
   }
 
-  async abandon(message: QueueMessage): Promise<void> {
+  async abandon(message: QueueMessage<CaptureJob>): Promise<void> {
     const currentReceipt = this.inFlight.get(message.id);
 
     if (!currentReceipt || currentReceipt !== message.popReceipt) {
@@ -83,7 +83,7 @@ export class LocalQueueAdapter implements IQueueConsumer {
       return;
     }
 
-    const job = message.body as CaptureJob;
+    const job = message.body;
 
     try {
       if (job.retryCount >= this.maxRetries) {
@@ -103,7 +103,7 @@ export class LocalQueueAdapter implements IQueueConsumer {
     await this.lock.acquire('queue', () => this.writeQueue([]));
   }
 
-  async complete(message: QueueMessage): Promise<void> {
+  async complete(message: QueueMessage<CaptureJob>): Promise<void> {
     const currentReceipt = this.inFlight.get(message.id);
 
     if (!currentReceipt || currentReceipt !== message.popReceipt) {
@@ -121,7 +121,7 @@ export class LocalQueueAdapter implements IQueueConsumer {
     await this.lock.acquire('queue', async () => {
       const queue = await this.readQueue();
 
-      const message: QueueMessage = {
+      const message: QueueMessage<CaptureJob> = {
         id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         body: job,
       };
@@ -131,11 +131,11 @@ export class LocalQueueAdapter implements IQueueConsumer {
     });
   }
 
-  async list(): Promise<QueueMessage[]> {
-    return this.readQueue();
+  async list(): Promise<QueueMessage<CaptureJob>[]> {
+    return (await this.readQueue()) as QueueMessage<CaptureJob>[];
   }
 
-  private isValidJob(message: QueueMessage): message is QueueMessage & { body: CaptureJob } {
+  private isValidJob(message: QueueMessage<unknown>): message is QueueMessage<CaptureJob> {
     const result = CaptureJobSchema.safeParse(message.body);
 
     if (!result.success) {
@@ -148,7 +148,7 @@ export class LocalQueueAdapter implements IQueueConsumer {
     return true;
   }
 
-  async *listen(signal?: AbortSignal): AsyncGenerator<QueueMessage> {
+  async *listen(signal?: AbortSignal): AsyncGenerator<QueueMessage<CaptureJob>> {
     while (!signal?.aborted) {
       const queue = await this.readQueue();
 
@@ -173,7 +173,7 @@ export class LocalQueueAdapter implements IQueueConsumer {
 
       const popReceipt = Math.random().toString(36).slice(2);
 
-      const messageWithReceipt: QueueMessage = {
+      const messageWithReceipt: QueueMessage<CaptureJob> = {
         ...rawMessage,
         popReceipt,
       };

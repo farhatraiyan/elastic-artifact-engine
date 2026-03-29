@@ -26,7 +26,5 @@
     "tsx": "^4.21.0",
     "typescript-eslint": "^8.57.2"
   },
-  "dependencies": {
-    "async-lock": "^1.4.1"
-  }
+  "dependencies": {}
 }

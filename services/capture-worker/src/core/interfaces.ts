@@ -1,21 +1,21 @@
 import { CaptureJob, JobStatus, QueueMessage } from '@render-engine/shared-types';
 
-export interface ICaptureService {
+export interface CaptureService {
   capture(job: CaptureJob): Promise<Buffer>;
   close(): Promise<void>;
   init(): Promise<void>;
 }
 
-export interface IMetadataService {
+export interface MetadataService {
   updateStatus(jobId: string, status: JobStatus, outputUrl?: string, error?: string): Promise<void>;
 }
 
-export interface IQueueConsumer {
-  abandon(message: QueueMessage): Promise<void>;
-  complete(message: QueueMessage): Promise<void>;
-  listen(signal?: AbortSignal): AsyncGenerator<QueueMessage>;
+export interface QueueConsumer<T = unknown> {
+  abandon(message: QueueMessage<T>): Promise<void>;
+  complete(message: QueueMessage<T>): Promise<void>;
+  listen(signal?: AbortSignal): AsyncGenerator<QueueMessage<T>>;
 }
 
-export interface IStorageService {
+export interface StorageService {
   save(jobId: string, filename: string, data: Buffer): Promise<string>;
 }

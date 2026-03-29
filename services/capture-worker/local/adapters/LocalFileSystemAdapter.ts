@@ -1,8 +1,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { IStorageService } from '../../src/core/interfaces.js';
+import { StorageService } from '../../src/core/interfaces.js';
 
-export class LocalFileSystemAdapter implements IStorageService {
+export class LocalFileSystemAdapter implements StorageService {
   private outputDir: string;
 
   constructor(outputDir: string) {

@@ -110,7 +110,7 @@ export class LocalCLI {
 
     this.log('Current Queue:');
     queue.forEach((msg, i) => {
-      const job = msg.body as CaptureJob;
+      const job = msg.body;
       this.log(`${i + 1}. [${job.id}] ${job.url} (${job.type}) - Retries: ${job.retryCount}`);
     });
   }

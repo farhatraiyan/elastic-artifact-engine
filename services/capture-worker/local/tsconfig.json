@@ -7,7 +7,7 @@
   "include": [
     ".",
     "../src",
-    "../tests/locals"
+    "../tests/local"
   ],
   "references": [
     {

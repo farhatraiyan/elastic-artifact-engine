@@ -15,10 +15,8 @@ dist-scripts/
 *.tsbuildinfo
 
 # Local Execution (Phase 1.1)
-local-queue.json
-output/
-services/capture-worker/local-queue.json
-services/capture-worker/output/
+local/storage/
+services/capture-worker/local/storage/
 docs
 
 # IDE & OS

@@ -28,8 +28,8 @@ export type JobState = {
 
 export type JobStatus = 'Queued' | 'Processing' | 'Completed' | 'Failed';
 
-export type QueueMessage = {
+export type QueueMessage<T = unknown> = {
   id: string;
-  body: unknown;
+  body: T;
   popReceipt?: string;
 };
