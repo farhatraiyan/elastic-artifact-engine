@@ -22,16 +22,16 @@
   },
   "dependencies": {
     "@render-engine/shared-types": "*",
-    "async-lock": "^1.4.1",
-    "playwright": "^1.40.0",
-    "ws": "^8.20.0",
-    "zod": "^3.24.2"
+    "playwright": "^1.40.0"
   },
   "devDependencies": {
     "@types/async-lock": "^1.4.2",
     "@types/node": "^20.0.0",
     "@types/ws": "^8.18.1",
+    "async-lock": "^1.4.1",
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "ws": "^8.20.0",
+    "zod": "^3.24.2"
   }
 }
