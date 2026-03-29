@@ -1,4 +1,4 @@
-import { CaptureJob, JobStatus } from '@render-engine/shared-types';
+import { CaptureJob, JobStatus, QueueMessage } from '@render-engine/shared-types';
 
 export interface ICaptureService {
   capture(job: CaptureJob): Promise<Buffer>;
@@ -11,15 +11,11 @@ export interface IMetadataService {
 }
 
 export interface IQueueConsumer {
-  listen(pollIntervalMs: number, signal?: AbortSignal): AsyncGenerator<IWorkUnit>;
+  abandon(message: QueueMessage): Promise<void>;
+  complete(message: QueueMessage): Promise<void>;
+  listen(signal?: AbortSignal): AsyncGenerator<QueueMessage>;
 }
 
 export interface IStorageService {
   save(jobId: string, filename: string, data: Buffer): Promise<string>;
-}
-
-export interface IWorkUnit {
-  job: CaptureJob;
-  reject(error: Error): Promise<void>;
-  resolve(): Promise<void>;
 }

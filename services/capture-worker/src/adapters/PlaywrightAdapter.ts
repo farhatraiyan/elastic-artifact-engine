@@ -3,6 +3,8 @@ import { CaptureJob, CaptureType } from '@render-engine/shared-types';
 import { ICaptureService } from '../core/interfaces.js';
 
 export class PlaywrightAdapter implements ICaptureService {
+  private browser: Browser | null = null;
+
   /**
    * Automatically scrolls the page to trigger lazy-loading of images and content.
    * Includes a maximum height limit to prevent hanging on infinite-scroll pages.
@@ -32,8 +34,6 @@ export class PlaywrightAdapter implements ICaptureService {
     // Wait for any remaining content to stabilize
     await page.waitForTimeout(1000);
   }
-
-  private browser: Browser | null = null;
 
   /**
    * Attempts to dismiss common cookie consent banners and overlays.

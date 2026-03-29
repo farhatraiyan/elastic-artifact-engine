@@ -5,10 +5,9 @@ import {
   ICaptureService,
   IMetadataService,
   IQueueConsumer,
-  IStorageService,
-  IWorkUnit
+  IStorageService
 } from '../../src/core/interfaces.js';
-import { CaptureJob } from '@render-engine/shared-types';
+import { CaptureJob, QueueMessage } from '@render-engine/shared-types';
 
 describe('Worker', () => {
   let mockCapture: ICaptureService;
@@ -25,6 +24,12 @@ describe('Worker', () => {
     retryCount: 0
   };
 
+  const sampleMessage: QueueMessage = {
+    id: 'msg-1',
+    body: sampleJob,
+    popReceipt: 'receipt-1'
+  };
+
   beforeEach(() => {
     mockCapture = {
       init: async () => {},
@@ -38,17 +43,47 @@ describe('Worker', () => {
       save: async () => '/path/to/job-1.pdf'
     };
     mockQueue = {
+      complete: async () => {},
+      abandon: async () => {},
       listen: async function* () {
-        const unit: IWorkUnit = {
-          job: sampleJob,
-          resolve: async () => {},
-          reject: async () => {}
-        };
-        yield unit;
+        yield sampleMessage;
       }
     };
 
     worker = new Worker(mockCapture, mockMetadata, mockQueue, mockStorage);
+  });
+
+  test('should process multiple jobs in parallel up to concurrency limit', async () => {
+    const job1: CaptureJob = { ...sampleJob, id: 'job-1' };
+    const job2: CaptureJob = { ...sampleJob, id: 'job-2' };
+    const job3: CaptureJob = { ...sampleJob, id: 'job-3' };
+
+    let activeCount = 0;
+    let maxActiveCount = 0;
+
+    mockCapture.capture = async () => {
+      activeCount++;
+      maxActiveCount = Math.max(maxActiveCount, activeCount);
+      await new Promise(resolve => setTimeout(resolve, 50));
+      activeCount--;
+      return Buffer.from('fake');
+    };
+
+    mockQueue.listen = async function* () {
+      yield { id: 'm1', body: job1, popReceipt: 'r1' };
+      yield { id: 'm2', body: job2, popReceipt: 'r2' };
+      yield { id: 'm3', body: job3, popReceipt: 'r3' };
+    };
+
+    // Concurrency 2
+    const startPromise = worker.start(2);
+
+    // Give it time to process
+    await new Promise(resolve => setTimeout(resolve, 300));
+    worker.stop();
+    await startPromise;
+
+    assert.strictEqual(maxActiveCount, 2, 'Should have processed exactly 2 jobs in parallel');
   });
 
   test('should process a job successfully', async () => {
@@ -57,14 +92,14 @@ describe('Worker', () => {
       statusUpdates.push(status);
     };
 
-    let saved = false;
-    mockStorage.save = async () => {
-      saved = true;
-      return 'done';
+    let completedMessage: QueueMessage | null = null;
+    const completeStub = async (msg: QueueMessage) => {
+      completedMessage = msg;
     };
+    mockQueue.complete = completeStub;
 
     // We only want to process one job then stop
-    const startPromise = worker.start(100);
+    const startPromise = worker.start();
 
     // Give it a moment to process the first job
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -72,7 +107,7 @@ describe('Worker', () => {
     await startPromise;
 
     assert.deepStrictEqual(statusUpdates, ['Processing', 'Completed']);
-    assert.strictEqual(saved, true);
+    assert.strictEqual((completedMessage as QueueMessage | null)?.id, 'msg-1');
   });
 
   test('should handle capture failure and update status to Failed', async () => {
@@ -85,21 +120,18 @@ describe('Worker', () => {
       throw new Error('Capture failed');
     };
 
-    let rejected = false;
-    mockQueue.listen = async function* () {
-      yield {
-        job: sampleJob,
-        resolve: async () => {},
-        reject: async () => { rejected = true; }
-      };
+    let abandonedMessage: QueueMessage | null = null;
+    const abandonStub = async (msg: QueueMessage) => {
+      abandonedMessage = msg;
     };
+    mockQueue.abandon = abandonStub;
 
-    const startPromise = worker.start(100);
+    const startPromise = worker.start();
     await new Promise(resolve => setTimeout(resolve, 200));
     worker.stop();
     await startPromise;
 
     assert.ok(statusUpdates.includes('Failed'));
-    assert.strictEqual(rejected, true);
+    assert.strictEqual((abandonedMessage as QueueMessage | null)?.id, 'msg-1');
   });
 });

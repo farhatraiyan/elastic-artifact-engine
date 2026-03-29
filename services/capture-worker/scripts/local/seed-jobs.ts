@@ -8,7 +8,7 @@ import { CaptureJob } from '@render-engine/shared-types';
  *   npx tsx scripts/local/seed-jobs.ts [url] [type]
  */
 
-const QUEUE_PATH = './local-queue.json';
+const QUEUE_PATH = './local/storage/queue.json';
 const adapter = new LocalQueueAdapter(QUEUE_PATH);
 
 const samples: CaptureJob[] = [

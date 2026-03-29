@@ -1,7 +1,17 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../dist-local"
+    "outDir": "../dist-local",
+    "rootDir": ".."
   },
-  "include": ["**/*"]
+  "include": [
+    ".",
+    "../src",
+    "../tests/locals"
+  ],
+  "references": [
+    {
+      "path": "../../packages/shared-types"
+    }
+  ]
 }

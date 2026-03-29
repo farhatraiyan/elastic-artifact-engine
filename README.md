@@ -30,7 +30,10 @@ Before moving to Azure, you can run the system locally using file-based mocks fo
 ### Setup
 ```bash
 npm install
-npm run build --workspaces
+# Build shared types first
+npm run build --workspace @render-engine/shared-types
+# Build the local worker for type-checking and testing
+npm run build:local --workspace @render-engine/capture-worker
 ```
 
 ### Running the Worker

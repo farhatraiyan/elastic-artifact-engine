@@ -16,10 +16,15 @@ This directory contains the local execution adapters for the Capture Worker. It 
     ```bash
     npm install
     ```
-2.  **Build Shared Types**: The worker depends on the shared types package.
+2.  **Build Prerequisites**: Build the shared types first.
     ```bash
     npm run build --workspace @render-engine/shared-types
     ```
+3.  **Build Local Worker**: Build for development, type-checking, and local testing.
+    ```bash
+    npm run build:local
+    ```
+    *Note: `npm run build` compiles only the production core (`src/`) and is not used for local development.*
 
 ## Running the Worker
 
@@ -30,36 +35,27 @@ cd services/capture-worker
 npm run dev
 ```
 
-The worker will start listening for jobs in `services/capture-worker/local-queue.json`.
+The worker will start an interactive CLI.
 
-## How to Capture a Webpage
+## Interactive CLI
 
-The local worker uses a JSON file as a mock queue. To trigger a capture:
+The local worker now provides a CLI for interaction:
 
-1.  **Create/Edit `local-queue.json`** in `services/capture-worker/`:
-    ```json
-    [
-      {
-        "id": "msg-001",
-        "body": {
-          "id": "job-abc",
-          "url": "https://www.google.com",
-          "type": "pdf",
-          "options": {
-            "width": 1280,
-            "height": 800
-          },
-          "retryCount": 0
-        }
-      }
-    ]
-    ```
+- `add <url> [type]`: Enqueue a new capture job (e.g., `add https://google.com screenshot`).
+- `list`: View the current queue.
+- `clear`: Clear all jobs from the queue.
+- `help`: Show available commands.
+- `exit`: Stop the worker and exit.
 
-2.  **Save the file**: The worker polls this file every 2 seconds. It will pick up the job, process it, and remove the entry from the JSON array.
+## View Results
 
-3.  **View Results**:
-    -   Captured files are saved to `services/capture-worker/output/`.
-    -   Status updates are logged to the console.
+- Captured files are saved to `services/capture-worker/local/storage/output/`.
+- The queue state is persisted in `services/capture-worker/local/storage/queue.json`.
+- Status updates are displayed directly in the CLI.
+
+## Parallel Processing
+
+The worker is configured by default to process **2 jobs in parallel**. You can adjust this in `services/capture-worker/local/index.ts`.
 
 ## Testing
 
