@@ -1,4 +1,4 @@
-import { Browser, Page, chromium } from 'playwright';
+import { Browser, Page, chromium } from 'playwright-core';
 import { CaptureJob, CaptureType } from '@render-engine/shared-types';
 import { CaptureService } from '../core/interfaces.js';
 

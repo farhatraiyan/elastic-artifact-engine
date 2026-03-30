@@ -85,7 +85,7 @@ For high-integrity testing in an environment identical to the cloud, you can run
 The image must be built from the **project root** to correctly include the monorepo dependencies (`@render-engine/shared-types`).
 
 ```bash
-docker build -t capture-worker:dev -f services/capture-worker/Dockerfile.dev .
+docker build -t capture-worker:dev -f services/capture-worker/docker/dev/Dockerfile .
 ```
 
 ### 2. Run the Container
