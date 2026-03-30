@@ -77,6 +77,32 @@ npm run test:dev
 ```
 *Note: `dist-dev` is automatically cleaned up after the test run.*
 
+## Containerized Dev Environment (Docker)
+
+For high-integrity testing in an environment identical to the cloud, you can run the Dev Worker inside a Playwright-ready Docker container.
+
+### 1. Build the Image
+The image must be built from the **project root** to correctly include the monorepo dependencies (`@render-engine/shared-types`).
+
+```bash
+docker build -t capture-worker:dev -f services/capture-worker/Dockerfile.dev .
+```
+
+### 2. Run the Container
+Map the internal WebSocket port (3005) to your host.
+
+```bash
+docker run -p 3005:3005 --rm capture-worker:dev
+```
+
+### 3. Connect with the Dev CLI
+Once the container is running, use the standard Dev CLI on your **host machine** to connect to it:
+
+```bash
+cd services/capture-worker
+npm run dev:cli ws://localhost:3005
+```
+
 ## Supported Job Options
 
 | Option | Type | Description |
