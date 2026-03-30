@@ -27,7 +27,7 @@ export class WebSocketQueueAdapter implements QueueConsumer<CaptureJob> {
     const result = CaptureJobSchema.safeParse(job);
     if (!result.success) {
       // eslint-disable-next-line no-console
-      console.error(`Malformed job received over WS:`, result.error.errors);
+      console.error(`Malformed job received over WS:`, result.error.issues);
       return false;
     }
     return true;

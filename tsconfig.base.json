@@ -11,10 +11,10 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "baseUrl": ".",
+    "types": ["node"],
     "paths": {
-      "@render-engine/shared-types": ["services/packages/shared-types/src/index.ts"],
-      "@render-engine/capture-worker": ["services/capture-worker/src/index.ts"]
+      "@render-engine/shared-types": ["./services/packages/shared-types/src/index.ts"],
+      "@render-engine/capture-worker": ["./services/capture-worker/src/index.ts"]
     }
   }
 }

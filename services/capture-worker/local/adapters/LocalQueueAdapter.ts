@@ -137,7 +137,7 @@ export class LocalQueueAdapter implements QueueConsumer<CaptureJob> {
 
     if (!result.success) {
       // eslint-disable-next-line no-console
-      console.error(`Malformed job in queue: ${message.id}`, result.error.errors);
+      console.error(`Malformed job in queue: ${message.id}`, result.error.issues);
 
       return false;
     }

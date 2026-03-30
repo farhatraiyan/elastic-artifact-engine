@@ -60,6 +60,11 @@ The project enforces strict linting and automated testing:
 - **Linting**: `npm run lint --workspaces`
 - **Testing**: `npm run test:local --workspace @render-engine/capture-worker`
 
+## ⚠️ Maintenance & Technical Debt
+
+- **TypeScript 6.0 Compatibility**: Currently, `npm install` requires the `--legacy-peer-deps` flag. This is because `@typescript-eslint` (v8.x) has a peer dependency range that ends at `<6.0.0`. 
+  - **Action**: Once a version of `@typescript-eslint` supporting TS 6.0+ is released, update the root `devDependencies` and remove the need for this flag.
+
 ## 🗺️ Phase Roadmap
 
 1. **Phase 1 (Worker):** ✅ Core browser logic with local adapters.
