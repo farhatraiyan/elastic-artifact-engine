@@ -15,8 +15,9 @@
     "test:local": "npm run test:local --workspaces --if-present",
     "test:dev": "npm run test:dev --workspaces --if-present",
     "posttest": "npm run clean",
-    "build": "npm run build --workspaces",
-    "clean": "npm run clean --workspaces --if-present",
+    "build": "tsc -b",
+    "build:clean": "tsc -b --clean && npm run clean",
+    "clean": "tsc -b --clean && npm run clean --workspaces --if-present",
     "lint": "npm run lint --workspaces"
   },
   "devDependencies": {

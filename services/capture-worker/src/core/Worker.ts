@@ -9,6 +9,7 @@ import {
 
 export class Worker {
   private abortController: AbortController | null = null;
+  private activeMessages = new Map<Promise<void>, QueueMessage<CaptureJob>>();
   private capture: CaptureService;
   private isRunning = false;
   private metadata: MetadataService;
@@ -30,6 +31,11 @@ export class Worker {
       await this.metadata.updateStatus(job.id, 'Completed', outputUrl);
       await this.queue.complete(message);
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        // We're stopping, let's just return and let start() handle it
+        return;
+      }
+
       const err = error as Error;
 
       await this.metadata.updateStatus(job.id, 'Failed', undefined, err.message);
@@ -58,8 +64,6 @@ export class Worker {
     const controller = new AbortController();
     this.abortController = controller;
 
-    const activePromises = new Set<Promise<void>>();
-
     try {
       await this.capture.init();
 
@@ -69,17 +73,24 @@ export class Worker {
         }
 
         // Wait for a slot if concurrency limit is reached
-        while (activePromises.size >= concurrency) {
-          await Promise.race(activePromises);
+        while (this.activeMessages.size >= concurrency) {
+          await Promise.race(this.activeMessages.keys());
         }
 
-        const promise = this.processMessage(message).finally(() => activePromises.delete(promise));
-        activePromises.add(promise);
+        const promise = this.processMessage(message).finally(() => this.activeMessages.delete(promise));
+        this.activeMessages.set(promise, message);
       }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
 
-      // Wait for all remaining jobs to finish
-      await Promise.all(activePromises);
+      throw error;
     } finally {
+      // Graceful shutdown: Abandon all in-flight jobs
+      const inFlightMessages = Array.from(this.activeMessages.values());
+      const abandonPromises = inFlightMessages.map(msg => this.queue.abandon(msg));
+
+      await Promise.allSettled(abandonPromises);
+
       await this.capture.close();
       this.isRunning = false;
     }

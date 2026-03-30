@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint . --ext .ts",
-    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+    "clean": "rm -rf dist* **/*.tsbuildinfo"
   },
   "dependencies": {
     "zod": "^4.3.6"

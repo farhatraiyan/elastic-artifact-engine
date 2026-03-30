@@ -136,4 +136,34 @@ describe('Worker', () => {
     assert.ok(abandonedMessage);
     assert.strictEqual((abandonedMessage as QueueMessage<CaptureJob>).id, 'msg-1');
   });
+
+  test('should abandon in-flight jobs on stop', async () => {
+    const abandonedMessages: string[] = [];
+    mockQueue.abandon = async (msg) => {
+      abandonedMessages.push(msg.id);
+    };
+
+    mockCapture.capture = async () => {
+      // Simulate a long-running job
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return Buffer.from('fake');
+    };
+
+    mockQueue.listen = async function* () {
+      yield { id: 'm1', body: { ...sampleJob, id: 'j1' }, popReceipt: 'r1' };
+      yield { id: 'm2', body: { ...sampleJob, id: 'j2' }, popReceipt: 'r2' };
+    };
+
+    const startPromise = worker.start(2);
+
+    // Give it time to pick up the jobs but not finish them
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    worker.stop();
+    await startPromise;
+
+    assert.strictEqual(abandonedMessages.length, 2, 'Should have abandoned both in-flight jobs');
+    assert.ok(abandonedMessages.includes('m1'));
+    assert.ok(abandonedMessages.includes('m2'));
+  });
 });

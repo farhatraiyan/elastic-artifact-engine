@@ -1,4 +1,7 @@
 {
   "files": [],
-  "include": []
+  "references": [
+    { "path": "services/packages/shared-types" },
+    { "path": "services/capture-worker" }
+  ]
 }

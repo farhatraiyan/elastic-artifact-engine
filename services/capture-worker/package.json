@@ -19,7 +19,7 @@
     "posttest:dev": "rm -rf dist-dev",
     "lint": "eslint .",
     "seed:local": "tsx scripts/local/seed-jobs.ts",
-    "clean": "rm -rf dist dist-local dist-dev dist-scripts local/storage scripts/dev/output src/*.tsbuildinfo local/*.tsbuildinfo dev/*.tsbuildinfo"
+    "clean": "rm -rf dist* local/storage scripts/dev/output **/*.tsbuildinfo"
   },
   "dependencies": {
     "@render-engine/shared-types": "*",

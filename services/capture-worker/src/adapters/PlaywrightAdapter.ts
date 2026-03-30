@@ -65,6 +65,29 @@ export class PlaywrightAdapter implements CaptureService {
     }
   }
 
+  private mapError(error: unknown): Error {
+    const err = error as Error;
+    const msg = err.message || '';
+
+    if (msg.includes('Timeout')) {
+      return new Error('Page Timeout: The page took too long to load or stabilize.');
+    }
+    if (msg.includes('ERR_NAME_NOT_RESOLVED')) {
+      return new Error('DNS Resolution Failed: Could not find the server at the provided URL.');
+    }
+    if (msg.includes('ERR_CONNECTION_REFUSED')) {
+      return new Error('Connection Refused: The server at the provided URL refused the connection.');
+    }
+    if (msg.includes('net::ERR')) {
+      return new Error(`Navigation Failed: A network error occurred (${msg.split(' at ')[0]}).`);
+    }
+    if (msg.includes('Browser closed')) {
+      return new Error('Browser Error: The browser engine closed unexpectedly.');
+    }
+
+    return err;
+  }
+
   async capture(job: CaptureJob): Promise<Buffer> {
     if (!this.browser) {
       await this.init();
@@ -108,6 +131,8 @@ export class PlaywrightAdapter implements CaptureService {
       };
 
       return await handlers[job.type]();
+    } catch (error) {
+      throw this.mapError(error);
     } finally {
       // Ensure the entire context is cleaned up
       await context.close();
