@@ -11,6 +11,7 @@ import { QueueConsumer } from '../../src/core/interfaces.js';
 export class WebSocketQueueAdapter implements QueueConsumer<CaptureJob> {
   private buffer: CaptureJob[] = [];
   private inFlight = new Map<string, string>();
+  private jobConnections = new Map<string, WebSocket>();
   private maxRetries: number;
   private wss: WebSocketServer;
 
@@ -61,10 +62,19 @@ export class WebSocketQueueAdapter implements QueueConsumer<CaptureJob> {
 
           if (!this.isValidJob(rawJob)) return;
 
+          this.jobConnections.set(rawJob.id, ws);
           this.enqueue(rawJob);
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error('Failed to parse WebSocket message:', error);
+        }
+      });
+
+      ws.on('close', () => {
+        for (const [jobId, connection] of this.jobConnections.entries()) {
+          if (connection !== ws) continue;
+
+          this.jobConnections.delete(jobId);
         }
       });
     });
@@ -90,16 +100,6 @@ export class WebSocketQueueAdapter implements QueueConsumer<CaptureJob> {
     }
   }
 
-  public broadcast(type: string, payload: unknown) {
-    const message = JSON.stringify({ type, payload });
-
-    for (const client of this.wss.clients) {
-      if (client.readyState !== WebSocket.OPEN) continue;
-
-      client.send(message);
-    }
-  }
-
   public close() {
     this.wss.close();
   }
@@ -112,6 +112,17 @@ export class WebSocketQueueAdapter implements QueueConsumer<CaptureJob> {
     }
 
     this.inFlight.delete(message.id);
+  }
+
+  public sendUpdate(jobId: string, type: string, payload: Record<string, unknown>) {
+    const ws = this.jobConnections.get(jobId);
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type,
+        payload: { ...payload, jobId }
+      }));
+    }
   }
 
   async *listen(signal?: AbortSignal): AsyncGenerator<QueueMessage<CaptureJob>> {

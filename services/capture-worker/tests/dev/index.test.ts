@@ -137,4 +137,59 @@ describe('Dev Entry Point (index.ts)', () => {
 
     assert.ok(statuses.includes('Failed'), 'Status should transition to Failed on DNS error');
   });
+
+  test('should isolate job updates between different clients', async () => {
+    const job1: CaptureJob = {
+      id: `job-1-${Date.now()}`,
+      url: 'data:text/html,<h1>Job 1</h1>',
+      type: 'pdf',
+      retryCount: 0
+    };
+
+    const ws1 = new WebSocket(`ws://localhost:${TEST_PORT}`);
+    const ws2 = new WebSocket(`ws://localhost:${TEST_PORT}`);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const receivedByWS2: any[] = [];
+
+    await new Promise<void>((resolve, reject) => {
+      ws2.on('open', resolve);
+      ws2.on('error', reject);
+    });
+
+    ws2.on('message', (data) => {
+      const msg = JSON.parse(data.toString());
+      receivedByWS2.push(msg);
+    });
+
+    // Run job 1 via ws1
+    await new Promise<void>((resolve, reject) => {
+      const run = () => {
+        ws1.send(JSON.stringify({ type: 'job_submit', payload: job1 }));
+      };
+
+      if (ws1.readyState === WebSocket.OPEN) {
+        run();
+      } else {
+        ws1.on('open', run);
+      }
+
+      ws1.on('message', (data) => {
+        const msg = JSON.parse(data.toString()) as WSMessage;
+        if (msg.type === 'job_result') {
+          resolve();
+        }
+      });
+      ws1.on('error', reject);
+
+      setTimeout(() => reject(new Error('Job 1 timed out in isolation test')), 10000);
+    });
+
+    // Verify ws2 received nothing for job 1
+    const job1Updates = receivedByWS2.filter(m => m.payload.jobId === job1.id);
+    assert.strictEqual(job1Updates.length, 0, 'Client 2 should not have received updates for Client 1\'s job');
+
+    ws1.close();
+    ws2.close();
+  });
 });

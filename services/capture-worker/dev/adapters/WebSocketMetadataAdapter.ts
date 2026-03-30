@@ -11,6 +11,6 @@ export class WebSocketMetadataAdapter implements MetadataService {
   }
 
   async updateStatus(jobId: string, status: JobStatus, outputUrl?: string, error?: string): Promise<void> {
-    this.queue.broadcast('job_status', { jobId, status, outputUrl, error });
+    this.queue.sendUpdate(jobId, 'job_status', { status, outputUrl, error });
   }
 }

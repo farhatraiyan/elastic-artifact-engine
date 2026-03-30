@@ -10,7 +10,7 @@ export class WebSocketStorageAdapter implements StorageService {
   }
 
   async save(jobId: string, filename: string, data: Buffer): Promise<string> {
-    this.queue.broadcast('job_result', { jobId, filename, data: data.toString('base64') });
+    this.queue.sendUpdate(jobId, 'job_result', { filename, data: data.toString('base64') });
 
     return `dev://websocket/${filename}`;
   }
