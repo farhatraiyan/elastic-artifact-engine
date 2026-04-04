@@ -47,6 +47,18 @@ The local worker now provides a CLI for interaction:
 - `help`: Show available commands.
 - `exit`: Stop the worker and exit.
 
+## Seeding Jobs
+
+If you want to quickly populate the queue with sample data without using the interactive CLI, you can use the seeding script from the service root:
+
+```bash
+# Seed default samples (Google, GitHub, Wikipedia)
+npm run seed:local
+
+# Or seed a custom URL
+npm run seed:local -- https://bing.com screenshot
+```
+
 ## View Results
 
 - Captured files are saved to `services/capture-worker/local/storage/output/`.
