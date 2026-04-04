@@ -23,8 +23,7 @@ export class Worker {
       await this.metadata.updateStatus(job.id, 'Processing');
 
       const data = await this.capture.capture(job);
-      const ext = job.type === 'pdf' ? 'pdf' : 'png';
-      const filename = `${job.id}.${ext}`;
+      const filename = `${job.id}.${job.type}`;
 
       const outputUrl = await this.storage.save(job.id, filename, data);
 
@@ -32,7 +31,6 @@ export class Worker {
       await this.queue.complete(message);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        // We're stopping, let's just return and let start() handle it
         return;
       }
 

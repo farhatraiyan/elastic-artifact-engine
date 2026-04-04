@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const CAPTURE_TYPES = ['pdf', 'screenshot'] as const;
+export const CAPTURE_TYPES = ['md', 'pdf', 'png'] as const;
 
 export const CaptureJobSchema = z.object({
   id: z.string().min(1),
@@ -11,6 +11,7 @@ export const CaptureJobSchema = z.object({
     height: z.number().int().positive().optional().default(800),
     waitForTimeout: z.number().int().nonnegative().optional(),
     injectCss: z.string().optional(),
+    raw: z.boolean().optional(),
   }).optional(),
   retryCount: z.number().int().nonnegative().optional().default(0),
 });

@@ -30,11 +30,11 @@ describe('PlaywrightAdapter', () => {
     assert.strictEqual(buffer.subarray(0, 4).toString(), '%PDF');
   });
 
-  test('should capture a Screenshot from a data URL', async () => {
+  test('should capture a PNG from a data URL', async () => {
     const job: CaptureJob = {
-      id: 'test-screenshot',
-      url: 'data:text/html,<h1>Test Screenshot</h1>',
-      type: 'screenshot',
+      id: 'test-png',
+      url: 'data:text/html,<h1>Test PNG</h1>',
+      type: 'png',
       options: { width: 1280, height: 800 },
       retryCount: 0
     };
@@ -50,7 +50,7 @@ describe('PlaywrightAdapter', () => {
     const job: CaptureJob = {
       id: 'test-css',
       url: 'data:text/html,<h1 id="target">Check My Color</h1>',
-      type: 'screenshot',
+      type: 'png',
       options: {
         width: 1280,
         height: 800,
@@ -61,5 +61,39 @@ describe('PlaywrightAdapter', () => {
 
     const buffer = await adapter.capture(job);
     assert.ok(buffer.length > 0);
+  });
+
+  test('should capture Markdown from a data URL', async () => {
+    const job: CaptureJob = {
+      id: 'test-md',
+      url: 'data:text/html,<h1>Test Markdown</h1><p>This is a paragraph.</p>',
+      type: 'md',
+      options: { width: 1280, height: 800, raw: true },
+      retryCount: 0
+    };
+
+    const buffer = await adapter.capture(job);
+    assert.ok(buffer.length > 0);
+    const content = buffer.toString('utf8');
+    assert.ok(content.includes('# Test Markdown'));
+    assert.ok(content.includes('This is a paragraph.'));
+  });
+
+  test('should capture Reader Markdown by default', async () => {
+    const job: CaptureJob = {
+      id: 'test-reader-md',
+      url: 'data:text/html,<html><body><nav>Menu</nav><main><h1>Article Title</h1><p>Main content.</p></main><footer>Footer</footer></body></html>',
+      type: 'md',
+      options: { width: 1280, height: 800 },
+      retryCount: 0
+    };
+
+    const buffer = await adapter.capture(job);
+    assert.ok(buffer.length > 0);
+    const content = buffer.toString('utf8');
+    assert.ok(content.includes('# Article Title'));
+    assert.ok(content.includes('Main content.'));
+    assert.strictEqual(content.includes('Menu'), false);
+    assert.strictEqual(content.includes('Footer'), false);
   });
 });

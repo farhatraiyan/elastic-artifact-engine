@@ -22,7 +22,7 @@ const samples: CaptureJob[] = [
   {
     id: `seed-github-${Date.now()}`,
     url: 'https://github.com',
-    type: 'screenshot',
+    type: 'png',
     options: {
       width: 1920,
       height: 1080,
@@ -36,6 +36,20 @@ const samples: CaptureJob[] = [
     type: 'pdf',
     options: { width: 1024, height: 768 },
     retryCount: 0
+  },
+  {
+    id: `seed-example-md-${Date.now()}`,
+    url: 'https://example.com',
+    type: 'md',
+    options: { width: 1280, height: 800, raw: true },
+    retryCount: 0
+  },
+  {
+    id: `seed-wikipedia-md-${Date.now()}`,
+    url: 'https://en.wikipedia.org/wiki/Artificial_intelligence',
+    type: 'md',
+    options: { width: 1280, height: 800 },
+    retryCount: 0
   }
 ];
 
@@ -43,11 +57,12 @@ async function seed() {
   const args = process.argv.slice(2);
 
   if (args.length >= 1) {
+    const isRaw = args.includes('--raw');
     const customJob: CaptureJob = {
       id: `custom-${Date.now()}`,
       url: args[0],
-      type: (args[1] as 'pdf' | 'screenshot') || 'pdf',
-      options: { width: 1280, height: 800 },
+      type: (args[1] as 'pdf' | 'png' | 'md') || 'pdf',
+      options: { width: 1280, height: 800, raw: isRaw },
       retryCount: 0
     };
 

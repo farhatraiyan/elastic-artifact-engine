@@ -84,6 +84,7 @@ export class LocalCLI {
 
     const url = args[0];
     const type = (args[1] as CaptureType) || 'pdf';
+    const isRaw = args.includes('--raw');
 
     const job: CaptureJob = {
       id: `job-${Date.now()}`,
@@ -92,6 +93,7 @@ export class LocalCLI {
       options: {
         width: 1280,
         height: 800,
+        raw: isRaw,
       },
       retryCount: 0,
     };
@@ -117,11 +119,12 @@ export class LocalCLI {
 
   private showHelp() {
     this.log('Available commands:');
-    this.log('  add <url> [type]   Enqueue a new job (type: pdf | screenshot)');
-    this.log('  list               Show jobs currently in the queue');
-    this.log('  clear              Remove all jobs from the queue');
-    this.log('  help               Show this help message');
-    this.log('  exit               Shutdown the worker and exit');
+    this.log('  add <url> [type] [--raw]  Enqueue a new job (type: md | pdf | png)');
+    this.log('                            For md: Reader Mode by default, --raw for full page.');
+    this.log('  list                      Show jobs currently in the queue');
+    this.log('  clear                     Remove all jobs from the queue');
+    this.log('  help                      Show this help message');
+    this.log('  exit                      Shutdown the worker and exit');
   }
 
   start() {

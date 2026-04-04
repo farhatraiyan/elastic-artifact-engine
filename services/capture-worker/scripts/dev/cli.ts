@@ -116,20 +116,35 @@ class DevCLI {
     }
   }
 
+  private async waitForOpen(): Promise<void> {
+    if (this.ws.readyState === WebSocket.OPEN) return;
+
+    return new Promise((resolve) => {
+      this.ws.once('open', resolve);
+    });
+  }
+
   private async handleAdd(args: string[]) {
     if (args.length < 1) {
-      this.log('Usage: add <url> [type] (type: pdf | screenshot)');
+      this.log('Usage: add <url> [type] (type: md | pdf | png)');
       return;
     }
 
+    await this.waitForOpen();
+
     const url = args[0];
     const type = (args[1] as CaptureType) || 'pdf';
+    const isRaw = args.includes('--raw');
 
     const job: CaptureJob = {
       id: `dev-${Date.now()}`,
       url,
       type,
-      options: { width: 1280, height: 800 },
+      options: {
+        width: 1280,
+        height: 800,
+        raw: isRaw,
+      },
       retryCount: 0,
     };
 
@@ -139,9 +154,10 @@ class DevCLI {
 
   private showHelp() {
     this.log('Available commands:');
-    this.log('  add <url> [type]   Submit a new capture job');
-    this.log('  help               Show this help message');
-    this.log('  exit               Disconnect and exit');
+    this.log('  add <url> [type] [--raw]  Submit a new capture job (type: md | pdf | png)');
+    this.log('                            For md: Reader Mode by default, --raw for full page.');
+    this.log('  help                      Show this help message');
+    this.log('  exit                      Disconnect and exit');
   }
 
   public start() {
