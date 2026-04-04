@@ -5,7 +5,7 @@
   "type": "module",
   "workspaces": [
     "services/*",
-    "services/packages/*"
+    "packages/*"
   ],
   "engines": {
     "node": ">=20.0.0"

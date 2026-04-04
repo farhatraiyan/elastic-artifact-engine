@@ -13,7 +13,7 @@
   ],
   "references": [
     {
-      "path": "../../packages/shared-types"
+      "path": "../../../packages/shared-types"
     }
   ]
 }

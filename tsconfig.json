@@ -1,7 +1,7 @@
 {
   "files": [],
   "references": [
-    { "path": "services/packages/shared-types" },
+    { "path": "packages/shared-types" },
     { "path": "services/capture-worker" }
   ]
 }

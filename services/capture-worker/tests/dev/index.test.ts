@@ -108,7 +108,7 @@ describe('Dev Entry Point (index.ts)', () => {
     const job: CaptureJob = {
       id: `e2e-ss-${Date.now()}`,
       url: 'data:text/html,<h1>E2E Screenshot Test</h1>',
-      type: 'screenshot',
+      type: 'png',
       retryCount: 0
     };
 

@@ -48,7 +48,7 @@ npm run dev:cli [ws-url]
 
 Once connected, the Dev CLI supports:
 
-- `add <url> [type]`: Submit a new capture job (type: `pdf` | `screenshot`).
+- `add <url> [type]`: Submit a new capture job (type: `pdf` | `png`).
 - `help`: Show available commands.
 - `exit`: Disconnect and exit.
 
@@ -108,6 +108,6 @@ npm run dev:cli ws://localhost:3005
 | Option | Type | Description |
 | :--- | :--- | :--- |
 | `url` | string | The full URL to capture. |
-| `type` | "pdf" \| "screenshot" | The output format. |
+| `type` | "pdf" \| "png" \| "md" | The output format. |
 | `options.injectCss` | string | (Optional) Custom CSS to inject into the page. |
 | `options.waitForTimeout` | number | (Optional) Milliseconds to wait after page load. |

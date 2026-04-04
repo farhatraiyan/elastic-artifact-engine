@@ -7,7 +7,7 @@ This directory contains the core services and shared packages that power the pla
 | Path | Name | Description |
 | :--- | :--- | :--- |
 | **[`capture-worker/`](./capture-worker)** | `@render-engine/capture-worker` | The rendering engine (Playwright). |
-| **[`packages/shared-types/`](./packages/shared-types)** | `@render-engine/shared-types` | Centralized Zod-backed schemas and types. |
+| **[`../packages/shared-types/`](../packages/shared-types)** | `@render-engine/shared-types` | Centralized Zod-backed schemas and types. |
 
 ## 🏗️ Architecture Note
 

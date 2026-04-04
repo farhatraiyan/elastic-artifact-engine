@@ -34,7 +34,7 @@ jobs:
         with:
           filters: |
             shared-types:
-              - 'services/packages/shared-types/**'
+              - 'packages/shared-types/**'
             core:
               - 'services/capture-worker/src/**'
               - 'services/capture-worker/tests/shared/**'

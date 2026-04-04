@@ -7,13 +7,13 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.base.json ./
 COPY services/capture-worker/package.json ./services/capture-worker/
-COPY services/packages/shared-types/package.json ./services/packages/shared-types/
+COPY packages/shared-types/package.json ./packages/shared-types/
 
 # Install all dependencies
 RUN npm install --legacy-peer-deps
 
 # Copy source code
-COPY services/packages/shared-types ./services/packages/shared-types
+COPY packages/shared-types ./packages/shared-types
 COPY services/capture-worker ./services/capture-worker
 
 # Build shared types and the worker
@@ -57,8 +57,8 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/services/capture-worker/package.json ./services/capture-worker/
 COPY --from=builder /app/services/capture-worker/dist-dev ./services/capture-worker/dist-dev
-COPY --from=builder /app/services/packages/shared-types/package.json ./services/packages/shared-types/
-COPY --from=builder /app/services/packages/shared-types/dist ./services/packages/shared-types/dist
+COPY --from=builder /app/packages/shared-types/package.json ./packages/shared-types/
+COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
 
 # Selective Pruning of high-bloat devDependencies from node_modules
 # Note: typescript, tsx, eslint, @types/* are in root or worker node_modules

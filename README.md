@@ -18,7 +18,7 @@ A full-stack platform for high-fidelity web captures (PDF/Screenshot/Markdown). 
 The project uses NPM Workspaces to manage services and shared packages:
 
 - **[`/services/capture-worker`](./services/capture-worker)**: The core rendering engine (Playwright). Includes adapters for local and cloud environments.
-- **[`/services/packages/shared-types`](./services/packages/shared-types)**: Unified Zod-backed types and schemas used across the system.
+- **[`/packages/shared-types`](./packages/shared-types)**: Unified Zod-backed types and schemas used across the system.
 - **[`/infrastructure`](./infrastructure)**: Bicep-based IaC for Azure provisioning.
 
 ## 🛠️ Getting Started (New Developers)

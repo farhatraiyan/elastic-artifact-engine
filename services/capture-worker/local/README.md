@@ -41,7 +41,7 @@ The worker will start an interactive CLI.
 
 The local worker now provides a CLI for interaction:
 
-- `add <url> [type]`: Enqueue a new capture job (e.g., `add https://google.com screenshot`).
+- `add <url> [type]`: Enqueue a new capture job (e.g., `add https://google.com png`).
 - `list`: View the current queue.
 - `clear`: Clear all jobs from the queue.
 - `help`: Show available commands.
@@ -56,7 +56,7 @@ If you want to quickly populate the queue with sample data without using the int
 npm run seed:local
 
 # Or seed a custom URL
-npm run seed:local -- https://bing.com screenshot
+npm run seed:local -- https://bing.com png
 ```
 
 ## View Results
@@ -83,6 +83,6 @@ npm run test:local
 | Option | Type | Description |
 | :--- | :--- | :--- |
 | `url` | string | The full URL to capture. |
-| `type` | "pdf" \| "screenshot" | The output format. |
+| `type` | "pdf" \| "png" \| "md" | The output format. |
 | `options.injectCss` | string | (Optional) Custom CSS to inject into the page. |
 | `options.waitForTimeout` | number | (Optional) Milliseconds to wait after page load. |

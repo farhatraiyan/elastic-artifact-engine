@@ -13,7 +13,7 @@ export default tseslint.config(
           './services/capture-worker/dev/tsconfig.json',
           './services/capture-worker/tests/tsconfig.json',
           './services/capture-worker/scripts/tsconfig.json',
-          './services/packages/shared-types/tsconfig.json'
+          './packages/shared-types/tsconfig.json'
         ],
         extraFileExtensions: ['.test.ts'],
         tsconfigRootDir: import.meta.dirname,
