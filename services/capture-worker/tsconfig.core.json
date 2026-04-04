@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist-core",
+    "rootDir": "."
+  },
+  "include": [
+    "src",
+    "tests/shared"
+  ],
+  "references": [
+    {
+      "path": "../packages/shared-types"
+    }
+  ]
+}
