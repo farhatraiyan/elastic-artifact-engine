@@ -1,18 +1,20 @@
-import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert';
-import { Worker } from '../../src/core/Worker.js';
+import { test, describe, beforeEach } from 'node:test';
+
+import { CaptureJob, QueueMessage } from '@render-engine/shared-types';
+
 import {
   CaptureService,
   MetadataService,
-  QueueConsumer,
+  QueueService,
   StorageService
-} from '../../src/core/interfaces.js';
-import { CaptureJob, QueueMessage } from '@render-engine/shared-types';
+} from '../src/core/interfaces.js';
+import { Worker } from '../src/core/Worker.js';
 
 describe('Worker', () => {
   let mockCapture: CaptureService;
   let mockMetadata: MetadataService;
-  let mockQueue: QueueConsumer<CaptureJob>;
+  let mockQueue: QueueService<CaptureJob>;
   let mockStorage: StorageService;
   let worker: Worker;
 

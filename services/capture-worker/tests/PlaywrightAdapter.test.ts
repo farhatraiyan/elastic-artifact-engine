@@ -1,7 +1,9 @@
-import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
-import { PlaywrightAdapter } from '../../src/adapters/PlaywrightAdapter.js';
+import { test, describe, before, after } from 'node:test';
+
 import { CaptureJob } from '@render-engine/shared-types';
+
+import { PlaywrightAdapter } from '../src/adapters/PlaywrightAdapter.js';
 
 describe('PlaywrightAdapter', () => {
   let adapter: PlaywrightAdapter;

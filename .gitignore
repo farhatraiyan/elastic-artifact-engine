@@ -15,12 +15,12 @@ dist-test/
 dist-scripts/
 *.tsbuildinfo
 
-# Local Execution (Phase 1.1)
-local/storage/
-services/capture-worker/local/storage/
+# Development
+output/
 
 # Gemini Context
 .gemini/
+GEMINI.md
 
 # IDE & OS
 .vscode/

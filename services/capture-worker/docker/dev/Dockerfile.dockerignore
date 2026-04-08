@@ -1,7 +1,6 @@
 # Ignore local node_modules and build artifacts
 node_modules
 dist*/
-local/
 scripts/
 tests/
 

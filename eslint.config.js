@@ -9,10 +9,8 @@ export default tseslint.config(
       parserOptions: {
         project: [
           './services/capture-worker/src/tsconfig.json',
-          './services/capture-worker/local/tsconfig.json',
-          './services/capture-worker/dev/tsconfig.json',
-          './services/capture-worker/tests/tsconfig.json',
           './services/capture-worker/scripts/tsconfig.json',
+          './services/capture-worker/tests/tsconfig.json',
           './packages/shared-types/tsconfig.json'
         ],
         extraFileExtensions: ['.test.ts'],
@@ -21,21 +19,35 @@ export default tseslint.config(
     },
     rules: {
       'no-console': 'error',
-      'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
+      'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1 }],
       'no-trailing-spaces': 'error',
+      'lines-between-class-members': [
+        'error',
+        'always',
+        { exceptAfterSingleLine: true }
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+  {
+    files: ['**/scripts/**/*.ts', '**/scripts/**/*.js'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+      },
+    },
+    rules: {
+      'no-console': 'off',
     },
   },
   {
     ignores: [
       '**/dist/**',
-      '**/dist-local/**',
-      '**/dist-dev/**',
-      '**/dist-scripts/**',
+      '**/dist-*/**',
       '**/node_modules/**',
-      '**/local-queue.json',
-      '**/output/**',
-      '**/*.tsbuildinfo'
+      '**/*.tsbuildinfo',
+      'eslint.config.js'
     ],
   }
 );

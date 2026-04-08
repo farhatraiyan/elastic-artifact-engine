@@ -11,13 +11,11 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "test": "npm test --workspaces",
-    "test:local": "npm run test:local --workspaces --if-present",
-    "test:dev": "npm run test:dev --workspaces --if-present",
+    "test": "npm run build && npm test --workspaces --if-present",
     "posttest": "npm run clean",
     "build": "tsc -b",
     "build:clean": "tsc -b --clean && npm run clean",
-    "clean": "tsc -b --clean && npm run clean --workspaces --if-present",
+    "clean": "tsc -b --clean && npm run clean --workspaces --if-present && find . -type f \\( -name '*.tsbuildinfo' -o -name '*.d.ts.map' -o -name '*.js.map' -o -name '*.d.ts' \\) -not -path '*/node_modules/*' -delete && find . -mindepth 3 -type f -name '*.js' -not -path '*/node_modules/*' -delete",
     "lint": "npm run lint --workspaces"
   },
   "devDependencies": {

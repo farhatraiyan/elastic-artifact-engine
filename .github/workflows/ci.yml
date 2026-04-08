@@ -24,8 +24,6 @@ jobs:
     outputs:
       shared-types: ${{ steps.filter.outputs.shared-types }}
       core: ${{ steps.filter.outputs.core }}
-      local: ${{ steps.filter.outputs.local }}
-      dev: ${{ steps.filter.outputs.dev }}
       lintable: ${{ steps.filter.outputs.lintable }}
     steps:
       - uses: actions/checkout@v4
@@ -37,14 +35,8 @@ jobs:
               - 'packages/shared-types/**'
             core:
               - 'services/capture-worker/src/**'
-              - 'services/capture-worker/tests/shared/**'
+              - 'services/capture-worker/tests/**'
               - 'services/capture-worker/tsconfig.core.json'
-            local:
-              - 'services/capture-worker/local/**'
-              - 'services/capture-worker/tests/local/**'
-            dev:
-              - 'services/capture-worker/dev/**'
-              - 'services/capture-worker/tests/dev/**'
             lintable:
               - '**/*.{ts,js,json}'
               - 'eslint.config.js'
@@ -65,7 +57,7 @@ jobs:
       - run: npm install --legacy-peer-deps
       - run: npm run lint
 
-  test-core:
+  test:
     needs: [pre-check, lint]
     if: |
       always() &&
@@ -76,6 +68,13 @@ jobs:
        needs.pre-check.outputs.core == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite
+        ports:
+          - 10000:10000
+          - 10001:10001
+          - 10002:10002
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -103,88 +102,6 @@ jobs:
       - name: Build Shared Types
         run: npm run build --workspace @render-engine/shared-types
 
-      - name: Run Core Tests
+      - name: Run Tests
         working-directory: services/capture-worker
-        run: npm run test:core
-
-  test-local:
-    needs: [pre-check, lint]
-    if: |
-      always() &&
-      needs.pre-check.result == 'success' &&
-      (needs.lint.result == 'success' || needs.lint.result == 'skipped') &&
-      (github.event_name == 'workflow_dispatch' && inputs.force_run_all ||
-       needs.pre-check.outputs.local == 'true')
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm install --legacy-peer-deps
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(node -e "console.log(require('./services/capture-worker/package.json').dependencies['playwright-core'])")" >> $GITHUB_OUTPUT
-
-      - name: Cache Playwright Browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
-
-      - name: Install Playwright Chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-
-      - name: Build Shared Types
-        run: npm run build --workspace @render-engine/shared-types
-
-      - name: Run Local Tests
-        working-directory: services/capture-worker
-        run: npm run test:local
-
-  test-dev:
-    needs: [pre-check, lint]
-    if: |
-      always() &&
-      needs.pre-check.result == 'success' &&
-      (needs.lint.result == 'success' || needs.lint.result == 'skipped') &&
-      (github.event_name == 'workflow_dispatch' && inputs.force_run_all ||
-       needs.pre-check.outputs.dev == 'true')
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm install --legacy-peer-deps
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(node -e "console.log(require('./services/capture-worker/package.json').dependencies['playwright-core'])")" >> $GITHUB_OUTPUT
-
-      - name: Cache Playwright Browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
-
-      - name: Install Playwright Chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-
-      - name: Build Shared Types
-        run: npm run build --workspace @render-engine/shared-types
-
-      - name: Run Dev Tests
-        working-directory: services/capture-worker
-        run: npm run test:dev
+        run: npm test

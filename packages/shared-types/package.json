@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
-    "clean": "rm -rf dist* **/*.tsbuildinfo"
+    "clean": "rm -rf dist* **/*.tsbuildinfo **/*.d.ts.map **/*.js.map"
   },
   "dependencies": {
     "zod": "^4.3.6"

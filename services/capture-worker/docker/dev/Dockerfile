@@ -18,9 +18,9 @@ COPY services/capture-worker ./services/capture-worker
 
 # Build shared types and the worker
 RUN npm run build --workspace @render-engine/shared-types
-RUN npm run build:dev:docker --workspace @render-engine/capture-worker
+RUN npm run build --workspace @render-engine/capture-worker
 
-# Stage 2: Final Dev Image
+# Stage 2: Final Image
 FROM node:20-slim
 
 WORKDIR /app
@@ -49,6 +49,7 @@ RUN apt-get update && \
     libcairo2 \
     libasound2 \
     && npx playwright install --with-deps chromium \
+    && npm install -g azurite \
     && apt-get purge -y --auto-remove \
     && rm -rf /var/lib/apt/lists/*
 
@@ -56,22 +57,36 @@ RUN apt-get update && \
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/services/capture-worker/package.json ./services/capture-worker/
+COPY --from=builder /app/services/capture-worker/dist ./services/capture-worker/dist
 COPY --from=builder /app/services/capture-worker/dist-dev ./services/capture-worker/dist-dev
 COPY --from=builder /app/packages/shared-types/package.json ./packages/shared-types/
 COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
 
-# Selective Pruning of high-bloat devDependencies from node_modules
-# Note: typescript, tsx, eslint, @types/* are in root or worker node_modules
+# Copy entrypoint script from builder
+COPY --from=builder /app/services/capture-worker/docker/dev/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh && mkdir -p /app/data
+
+# Selective Pruning of high-bloat devDependencies
 RUN rm -rf \
     node_modules/typescript \
     node_modules/tsx \
     node_modules/eslint \
     node_modules/@typescript-eslint \
-    node_modules/@types \
-    services/capture-worker/node_modules/async-lock
+    node_modules/@types
 
-# Expose the WebSocket port
-EXPOSE 3005
+# Default Environment Variables (Expects Azurite or real Azure to be provided via ENV)
+ENV AZURE_STORAGE_CONNECTION_STRING="UseDevelopmentStorage=true"
+ENV AZURE_STORAGE_BLOB_CONTAINER_NAME="captures"
+ENV AZURE_STORAGE_QUEUE_NAME="jobs"
+ENV AZURE_STORAGE_TABLE_NAME="metadata"
+ENV CONCURRENCY=2
+ENV ENABLE_CLI=false
 
-# Start the dev worker
-CMD ["npm", "run", "dev:worker", "--workspace", "@render-engine/capture-worker"]
+# Expose Azurite ports (Blob, Queue, Table)
+EXPOSE 10000 10001 10002
+
+# Azurite data persistence
+VOLUME ["/app/data"]
+
+# Start the standalone environment
+ENTRYPOINT ["./docker-entrypoint.sh"]

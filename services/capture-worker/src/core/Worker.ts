@@ -3,7 +3,7 @@ import { CaptureJob, QueueMessage } from '@render-engine/shared-types';
 import {
   CaptureService,
   MetadataService,
-  QueueConsumer,
+  QueueService,
   StorageService
 } from './interfaces.js';
 
@@ -13,7 +13,7 @@ export class Worker {
   private capture: CaptureService;
   private isRunning = false;
   private metadata: MetadataService;
-  private queue: QueueConsumer<CaptureJob>;
+  private queue: QueueService<CaptureJob>;
   private storage: StorageService;
 
   private async processMessage(message: QueueMessage<CaptureJob>) {
@@ -25,10 +25,12 @@ export class Worker {
       const data = await this.capture.capture(job);
       const filename = `${job.id}.${job.type}`;
 
-      const outputUrl = await this.storage.save(job.id, filename, data);
+      const outputUrl = await this.storage.save(filename, data);
 
-      await this.metadata.updateStatus(job.id, 'Completed', outputUrl);
-      await this.queue.complete(message);
+      await Promise.all([
+        this.metadata.updateStatus(job.id, 'Completed', outputUrl),
+        this.queue.complete(message)
+      ]);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         return;
@@ -36,15 +38,17 @@ export class Worker {
 
       const err = error as Error;
 
-      await this.metadata.updateStatus(job.id, 'Failed', undefined, err.message);
-      await this.queue.abandon(message);
+      await Promise.all([
+        this.metadata.updateStatus(job.id, 'Failed', undefined, err.message),
+        this.queue.abandon(message)
+      ]);
     }
   }
 
   constructor(
     capture: CaptureService,
     metadata: MetadataService,
-    queue: QueueConsumer<CaptureJob>,
+    queue: QueueService<CaptureJob>,
     storage: StorageService
   ) {
     this.capture = capture;

@@ -5,10 +5,10 @@
       "path": "./src/tsconfig.json"
     },
     {
-      "path": "./local/tsconfig.json"
+      "path": "./scripts/tsconfig.json"
     },
     {
-      "path": "./dev/tsconfig.json"
+      "path": "./tests/tsconfig.json"
     }
   ]
 }

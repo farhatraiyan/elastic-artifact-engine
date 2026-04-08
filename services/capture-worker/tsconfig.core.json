@@ -2,11 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist-core",
-    "rootDir": "."
+    "rootDir": ".",
   },
   "include": [
     "src",
-    "tests/shared"
+    "tests"
   ],
   "references": [
     {

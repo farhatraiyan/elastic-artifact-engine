@@ -10,7 +10,7 @@ This package serves as the **single source of truth** for all types and validati
 ## 📂 Core Concepts
 
 - **`CaptureJob`**: Defines the data required to perform a web capture (URL, options, type).
-- **`JobStatus`**: Enum-like schema for tracking the lifecycle of a job (`queued`, `processing`, `completed`, `failed`).
+- **`JobStatus`**: Enum-like schema for tracking the lifecycle of a job (`Queued`, `Processing`, `Completed`, `Failed`).
 - **`JobResult`**: The structure of a completed capture result.
 
 ## 🛠️ Usage
