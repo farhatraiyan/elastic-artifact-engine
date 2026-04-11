@@ -1,6 +1,6 @@
 # Shared Types Package
 
-This package serves as the **single source of truth** for all types and validation schemas used across the Render Engine project.
+This package serves as the **single source of truth** for all types and validation schemas used across the Capture Automation Platform project.
 
 ## 🏗️ Design Philosophy
 
@@ -19,7 +19,7 @@ This package serves as the **single source of truth** for all types and validati
 As a workspace dependency, it is automatically linked by NPM:
 ```json
 "dependencies": {
-  "@render-engine/shared-types": "*"
+  "@capture-automation-platform/shared-types": "*"
 }
 ```
 
@@ -27,7 +27,7 @@ As a workspace dependency, it is automatically linked by NPM:
 Always import schemas and types from the package root:
 
 ```typescript
-import { CaptureJob, CaptureJobSchema } from "@render-engine/shared-types";
+import { CaptureJob, CaptureJobSchema } from "@capture-automation-platform/shared-types";
 
 // Validate incoming data
 const job = CaptureJobSchema.parse(rawData);
@@ -42,7 +42,7 @@ When you modify schemas in `src/index.ts`, you **must** rebuild the package so t
 
 ```bash
 # From project root
-npm run build --workspace @render-engine/shared-types
+npm run build --workspace @capture-automation-platform/shared-types
 ```
 
 ### Quality Control

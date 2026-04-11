@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { test, describe, before, after } from 'node:test';
 
-import { CaptureJob } from '@render-engine/shared-types';
+import { CaptureJob } from '@capture-automation-platform/shared-types';
 
 import { PlaywrightAdapter } from '../src/adapters/PlaywrightAdapter.js';
 

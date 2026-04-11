@@ -1,4 +1,4 @@
-import { CaptureJob, CaptureType } from '@render-engine/shared-types';
+import { CaptureJob, CaptureType } from '@capture-automation-platform/shared-types';
 
 import { Browser, Page, chromium } from 'playwright-core';
 // @ts-expect-error - plugin lacks types

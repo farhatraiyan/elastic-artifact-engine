@@ -17,8 +17,8 @@ COPY packages/shared-types ./packages/shared-types
 COPY services/browser-orchestrator ./services/browser-orchestrator
 
 # Build shared types and the worker
-RUN npm run build --workspace @render-engine/shared-types
-RUN npm run build --workspace @render-engine/browser-orchestrator
+RUN npm run build --workspace @capture-automation-platform/shared-types
+RUN npm run build --workspace @capture-automation-platform/browser-orchestrator
 
 # Stage 2: Final Image
 FROM node:20-slim

@@ -1,4 +1,4 @@
-import { CaptureJob, JobStatus, QueueMessage } from '@render-engine/shared-types';
+import { CaptureJob, JobStatus, QueueMessage } from '@capture-automation-platform/shared-types';
 
 export interface CaptureService {
   capture(job: CaptureJob): Promise<Buffer>;

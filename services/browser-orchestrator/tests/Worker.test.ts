@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { test, describe, beforeEach } from 'node:test';
 
-import { CaptureJob, QueueMessage } from '@render-engine/shared-types';
+import { CaptureJob, QueueMessage } from '@capture-automation-platform/shared-types';
 
 import {
   CaptureService,

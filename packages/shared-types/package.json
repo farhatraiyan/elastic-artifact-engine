@@ -1,5 +1,5 @@
 {
-  "name": "@render-engine/shared-types",
+  "name": "@capture-automation-platform/shared-types",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",

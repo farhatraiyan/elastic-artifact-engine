@@ -1,4 +1,4 @@
-import { CaptureJob, CaptureType, JobStatus, JobState } from '@render-engine/shared-types';
+import { CaptureJob, CaptureType, JobStatus, JobState } from '@capture-automation-platform/shared-types';
 
 import { BlobServiceClient } from '@azure/storage-blob';
 import { QueueClient } from '@azure/storage-queue';

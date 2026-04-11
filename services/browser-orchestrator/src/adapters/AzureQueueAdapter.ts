@@ -1,6 +1,6 @@
 import { QueueClient } from '@azure/storage-queue';
 import { QueueService } from '../core/interfaces.js';
-import { QueueMessage } from '@render-engine/shared-types';
+import { QueueMessage } from '@capture-automation-platform/shared-types';
 import { setTimeout } from 'timers/promises';
 
 export class AzureQueueAdapter<T> implements QueueService<T> {

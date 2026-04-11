@@ -3,7 +3,7 @@ import { AzureQueueAdapter } from './adapters/AzureQueueAdapter.js';
 import { AzureTableMetadataAdapter } from './adapters/AzureTableMetadataAdapter.js';
 import { PlaywrightAdapter } from './adapters/PlaywrightAdapter.js';
 import { Worker } from './core/Worker.js';
-import { CaptureJob } from '@render-engine/shared-types';
+import { CaptureJob } from '@capture-automation-platform/shared-types';
 
 async function main() {
   // Configuration

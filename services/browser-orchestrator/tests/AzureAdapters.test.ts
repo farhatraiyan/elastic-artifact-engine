@@ -5,7 +5,7 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import { TableClient } from '@azure/data-tables';
 import { QueueClient } from '@azure/storage-queue';
 
-import { CaptureJob } from '@render-engine/shared-types';
+import { CaptureJob } from '@capture-automation-platform/shared-types';
 
 import { AzureBlobStorageAdapter } from '../src/adapters/AzureBlobStorageAdapter.js';
 import { AzureQueueAdapter } from '../src/adapters/AzureQueueAdapter.js';

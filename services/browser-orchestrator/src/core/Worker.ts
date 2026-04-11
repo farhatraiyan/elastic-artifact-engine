@@ -1,4 +1,4 @@
-import { CaptureJob, QueueMessage } from '@render-engine/shared-types';
+import { CaptureJob, QueueMessage } from '@capture-automation-platform/shared-types';
 
 import {
   CaptureService,

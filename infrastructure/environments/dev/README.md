@@ -14,11 +14,11 @@ To deploy the ACR using the provided Bicep template:
 
 ```bash
 # Create a resource group (if not already created)
-az group create --name rg-render-engine-dev --location eastus
+az group create --name rg-capture-automation-platform-dev --location eastus
 
 # Deploy the ACR
 az deployment group create \
-  --resource-group rg-render-engine-dev \
+  --resource-group rg-capture-automation-platform-dev \
   --template-file infrastructure/environments/dev/acr.bicep \
   --parameters acrSku=Basic
 ```
@@ -29,7 +29,7 @@ Authenticate your local Docker client to the ACR:
 
 ```bash
 # Get the ACR login server (e.g., acr[unique].azurecr.io)
-export ACR_NAME=$(az acr list --resource-group rg-render-engine-dev --query "[0].name" -o tsv)
+export ACR_NAME=$(az acr list --resource-group rg-capture-automation-platform-dev --query "[0].name" -o tsv)
 az acr login --name $ACR_NAME
 ```
 

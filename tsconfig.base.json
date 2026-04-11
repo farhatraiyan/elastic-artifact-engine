@@ -13,8 +13,8 @@
     "declarationMap": true,
     "types": ["node"],
     "paths": {
-      "@render-engine/shared-types": ["./packages/shared-types/src/index.ts"],
-      "@render-engine/browser-orchestrator": ["./services/browser-orchestrator/src/index.ts"]
+      "@capture-automation-platform/shared-types": ["./packages/shared-types/src/index.ts"],
+      "@capture-automation-platform/browser-orchestrator": ["./services/browser-orchestrator/src/index.ts"]
     }
   }
 }
