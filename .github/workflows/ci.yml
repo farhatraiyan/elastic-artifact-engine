@@ -85,7 +85,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Build Shared Types
-        run: npm run build --workspace @render-engine/shared-types
+        run: npm run build --workspace @capture-automation-platform/shared-types
 
       - name: Run Tests
         working-directory: services/browser-orchestrator
