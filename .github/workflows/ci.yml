@@ -34,9 +34,7 @@ jobs:
             shared-types:
               - 'packages/shared-types/**'
             core:
-              - 'services/browser-orchestrator/src/**'
-              - 'services/browser-orchestrator/tests/**'
-              - 'services/browser-orchestrator/tsconfig.core.json'
+              - 'services/browser-orchestrator/**'
             lintable:
               - '**/*.{ts,js,json}'
               - 'eslint.config.js'
@@ -59,22 +57,9 @@ jobs:
 
   test:
     needs: [pre-check, lint]
-    if: |
-      always() &&
-      needs.pre-check.result == 'success' &&
-      (needs.lint.result == 'success' || needs.lint.result == 'skipped') &&
-      (github.event_name == 'workflow_dispatch' && inputs.force_run_all ||
-       needs.pre-check.outputs.shared-types == 'true' ||
-       needs.pre-check.outputs.core == 'true')
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    services:
-      azurite:
-        image: mcr.microsoft.com/azure-storage/azurite
-        ports:
-          - 10000:10000
-          - 10001:10001
-          - 10002:10002
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

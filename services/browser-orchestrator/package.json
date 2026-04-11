@@ -14,7 +14,7 @@
     "services:up": "docker compose -f docker/dev/docker-compose.yml up -d",
     "services:down": "docker compose -f docker/dev/docker-compose.yml down",
     "start": "node dist/index.js",
-    "test": "npm run services:up && (npm run build:core && node --test dist-core/tests/*.test.js); npm run services:down"
+    "test": "npm run services:up && (npm run build:core && node --test dist-core/tests/*.test.js) && npm run services:down"
   },
   "dependencies": {
     "@azure/data-tables": "^13.3.2",
