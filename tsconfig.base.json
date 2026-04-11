@@ -14,7 +14,7 @@
     "types": ["node"],
     "paths": {
       "@render-engine/shared-types": ["./packages/shared-types/src/index.ts"],
-      "@render-engine/capture-worker": ["./services/capture-worker/src/index.ts"]
+      "@render-engine/browser-orchestrator": ["./services/browser-orchestrator/src/index.ts"]
     }
   }
 }

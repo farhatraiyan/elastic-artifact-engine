@@ -17,7 +17,7 @@ A full-stack platform for high-fidelity web captures (PDF/Screenshot/Markdown). 
 
 The project uses NPM Workspaces to manage services and shared packages:
 
-- **[`/services/capture-worker`](./services/capture-worker)**: The core rendering engine (Playwright). Unified Azure SDK-based architecture for all environments.
+- **[`/services/browser-orchestrator`](./services/browser-orchestrator)**: The core rendering engine (Playwright). Unified Azure SDK-based architecture for all environments.
 - **[`/packages/shared-types`](./packages/shared-types)**: Unified Zod-backed types and schemas used across the system.
 - **[`/infrastructure`](./infrastructure)**: Bicep-based IaC for Azure provisioning.
 
@@ -26,7 +26,7 @@ The project uses NPM Workspaces to manage services and shared packages:
 ### Prerequisites
 - **Node.js**: v20+
 - **Azurite**: Required for local storage/queue emulation.
-  - Recommended: `npm run services:up --workspace @render-engine/capture-worker`
+  - Recommended: `npm run services:up --workspace @render-engine/browser-orchestrator`
   - Manual: `docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 mcr.microsoft.com/azure-storage/azurite --skipApiVersionCheck`
 - **Playwright Browsers**: `npx playwright install chromium`
 
@@ -51,17 +51,17 @@ The project uses a unified **Azurite-backed** workflow:
 
 1.  **Start Azurite**: 
     ```bash
-    npm run services:up --workspace @render-engine/capture-worker
+    npm run services:up --workspace @render-engine/browser-orchestrator
     ```
 2.  **Start Worker**: 
     ```bash
-    npm run dev --workspace @render-engine/capture-worker
+    npm run dev --workspace @render-engine/browser-orchestrator
     ```
 3.  **Submit Jobs (CLI)**:
     ```bash
-    npm run ingress --workspace @render-engine/capture-worker -- <url> [type]
+    npm run ingress --workspace @render-engine/browser-orchestrator -- <url> [type]
     ```
-    Example: `npm run ingress --workspace @render-engine/capture-worker -- https://example.com pdf`
+    Example: `npm run ingress --workspace @render-engine/browser-orchestrator -- https://example.com pdf`
 
 ## ✅ Quality Standards
 

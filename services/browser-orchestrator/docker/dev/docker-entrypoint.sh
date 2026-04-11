@@ -22,10 +22,10 @@ sleep 2
 # Initialize resources (Queue, Blob, Table) if using local storage
 if [[ "$AZURE_STORAGE_CONNECTION_STRING" == *"UseDevelopmentStorage=true"* ]]; then
   echo "🛠️  Initializing local storage resources..."
-  node services/capture-worker/dist-dev/setup-azurite.js
+  node services/browser-orchestrator/dist-dev/setup-azurite.js
 fi
 
-# Start the Capture Worker
-echo "🏗️ Starting Capture Worker..."
+# Start the Browser Orchestrator
+echo "🏗️ Starting Browser Orchestrator..."
 # Use 'exec' so the worker process receives signals directly from Docker
-exec npm start --workspace @render-engine/capture-worker
+exec npm start --workspace @render-engine/browser-orchestrator

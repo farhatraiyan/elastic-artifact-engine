@@ -26,7 +26,7 @@ async function main() {
   const worker = new Worker(capture, metadata, queue, storage);
 
   // eslint-disable-next-line no-console
-  console.log('--- Render Engine Worker ---');
+  console.log('--- Browser Orchestrator Worker ---');
   // eslint-disable-next-line no-console
   console.log(`Storage: ${CONNECTION_STRING === 'UseDevelopmentStorage=true' ? 'Azurite (Local)' : 'Azure Storage (Cloud)'}`);
 

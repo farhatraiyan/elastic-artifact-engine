@@ -1,5 +1,5 @@
 {
-  "name": "@render-engine/capture-worker",
+  "name": "@render-engine/browser-orchestrator",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",

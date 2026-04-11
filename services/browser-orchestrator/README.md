@@ -1,6 +1,6 @@
-# Capture Worker Service
+# Browser Orchestrator Service
 
-The **Capture Worker** is the core rendering engine of the platform. It uses Playwright to perform high-fidelity web captures and uses Azure Storage (Queue, Table, Blob) for its operational lifecycle.
+The **Browser Orchestrator** is the core rendering engine of the platform. It uses Playwright to perform high-fidelity web captures and uses Azure Storage (Queue, Table, Blob) for its operational lifecycle.
 
 ## ✨ Features
 
@@ -62,7 +62,7 @@ azurite --silent --location ./data --debug ./data/debug.log --skipApiVersionChec
 
 ## 🛠️ Key Scripts
 
-Run these from the service root (`services/capture-worker/`):
+Run these from the service root (`services/browser-orchestrator/`):
 
 | Command | Description |
 | :--- | :--- |
@@ -76,11 +76,11 @@ Run these from the service root (`services/capture-worker/`):
 
 ## 🐳 Docker Deployment
 
-To run the capture-worker with its built-in Azurite instance (all-in-one local environment):
+To run the browser-orchestrator with its built-in Azurite instance (all-in-one local environment):
 
 ```bash
-docker build -t capture-worker -f services/capture-worker/docker/dev/Dockerfile .
-docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 -e AZURE_STORAGE_CONNECTION_STRING="UseDevelopmentStorage=true" capture-worker
+docker build -t browser-orchestrator -f services/browser-orchestrator/docker/dev/Dockerfile .
+docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 -e AZURE_STORAGE_CONNECTION_STRING="UseDevelopmentStorage=true" browser-orchestrator
 ```
 
 ## ☁️ Cloud Smoke Testing (ACA)

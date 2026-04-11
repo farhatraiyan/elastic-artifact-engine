@@ -34,9 +34,9 @@ jobs:
             shared-types:
               - 'packages/shared-types/**'
             core:
-              - 'services/capture-worker/src/**'
-              - 'services/capture-worker/tests/**'
-              - 'services/capture-worker/tsconfig.core.json'
+              - 'services/browser-orchestrator/src/**'
+              - 'services/browser-orchestrator/tests/**'
+              - 'services/browser-orchestrator/tsconfig.core.json'
             lintable:
               - '**/*.{ts,js,json}'
               - 'eslint.config.js'
@@ -84,7 +84,7 @@ jobs:
       
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(node -e "console.log(require('./services/capture-worker/package.json').dependencies['playwright-core'])")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -e "console.log(require('./services/browser-orchestrator/package.json').dependencies['playwright-core'])")" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright Browsers
         uses: actions/cache@v4
@@ -103,5 +103,5 @@ jobs:
         run: npm run build --workspace @render-engine/shared-types
 
       - name: Run Tests
-        working-directory: services/capture-worker
+        working-directory: services/browser-orchestrator
         run: npm test

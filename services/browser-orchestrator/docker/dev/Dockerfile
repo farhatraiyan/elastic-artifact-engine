@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy workspace configuration and manifests
 COPY package*.json ./
 COPY tsconfig.base.json ./
-COPY services/capture-worker/package.json ./services/capture-worker/
+COPY services/browser-orchestrator/package.json ./services/browser-orchestrator/
 COPY packages/shared-types/package.json ./packages/shared-types/
 
 # Install all dependencies
@@ -14,11 +14,11 @@ RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY packages/shared-types ./packages/shared-types
-COPY services/capture-worker ./services/capture-worker
+COPY services/browser-orchestrator ./services/browser-orchestrator
 
 # Build shared types and the worker
 RUN npm run build --workspace @render-engine/shared-types
-RUN npm run build --workspace @render-engine/capture-worker
+RUN npm run build --workspace @render-engine/browser-orchestrator
 
 # Stage 2: Final Image
 FROM node:20-slim
@@ -56,14 +56,14 @@ RUN apt-get update && \
 # Copy artifacts from builder
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/services/capture-worker/package.json ./services/capture-worker/
-COPY --from=builder /app/services/capture-worker/dist ./services/capture-worker/dist
-COPY --from=builder /app/services/capture-worker/dist-dev ./services/capture-worker/dist-dev
+COPY --from=builder /app/services/browser-orchestrator/package.json ./services/browser-orchestrator/
+COPY --from=builder /app/services/browser-orchestrator/dist ./services/browser-orchestrator/dist
+COPY --from=builder /app/services/browser-orchestrator/dist-dev ./services/browser-orchestrator/dist-dev
 COPY --from=builder /app/packages/shared-types/package.json ./packages/shared-types/
 COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
 
 # Copy entrypoint script from builder
-COPY --from=builder /app/services/capture-worker/docker/dev/docker-entrypoint.sh ./docker-entrypoint.sh
+COPY --from=builder /app/services/browser-orchestrator/docker/dev/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh && mkdir -p /app/data
 
 # Selective Pruning of high-bloat devDependencies

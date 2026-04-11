@@ -8,9 +8,9 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         project: [
-          './services/capture-worker/src/tsconfig.json',
-          './services/capture-worker/scripts/tsconfig.json',
-          './services/capture-worker/tests/tsconfig.json',
+          './services/browser-orchestrator/src/tsconfig.json',
+          './services/browser-orchestrator/scripts/tsconfig.json',
+          './services/browser-orchestrator/tests/tsconfig.json',
           './packages/shared-types/tsconfig.json'
         ],
         extraFileExtensions: ['.test.ts'],

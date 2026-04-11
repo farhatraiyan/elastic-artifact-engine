@@ -2,6 +2,6 @@
   "files": [],
   "references": [
     { "path": "packages/shared-types" },
-    { "path": "services/capture-worker" }
+    { "path": "services/browser-orchestrator" }
   ]
 }
