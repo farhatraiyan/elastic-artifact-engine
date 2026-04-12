@@ -35,7 +35,12 @@ The worker requires **Azurite** (Azure Storage API emulator) for local developme
 
 ### Option A: Docker Compose (Recommended)
 ```bash
+# 1. Start the container
 npm run services:up
+
+# 2. Build and initialize (Queue, Blob, Table)
+npm run build
+npm run services:setup
 ```
 
 ### Option B: Docker (Manual)
@@ -74,36 +79,18 @@ Run these from the service root (`services/browser-orchestrator/`):
 | `npm run test` | Runs all tests with automated Azurite lifecycle management. |
 | `npm run lint` | Runs ESLint. |
 
-## 🐳 Docker Deployment
+## 🐳 Docker (Image Testing)
 
-To run the browser-orchestrator with its built-in Azurite instance (all-in-one local environment):
+To test the worker image locally against the containerized Azurite instance:
 
-```bash
-docker build -t browser-orchestrator -f services/browser-orchestrator/docker/dev/Dockerfile .
-docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 -e AZURE_STORAGE_CONNECTION_STRING="UseDevelopmentStorage=true" browser-orchestrator
-```
+1. **Start Azurite**: `npm run services:up`
+2. **Build the Worker**: `docker build -t browser-orchestrator -f services/browser-orchestrator/docker/Dockerfile .`
+3. **Run the Worker**:
+   ```bash
+   docker run --rm \
+     --network host \
+     -e AZURE_STORAGE_CONNECTION_STRING="UseDevelopmentStorage=true" \
+     browser-orchestrator
+   ```
 
-## ☁️ Cloud Smoke Testing (ACA)
-
-If you have deployed the all-in-one container (Worker + Azurite) to **Azure Container Apps**, you can connect your local `dev-cli` to the remote Azurite instance for smoke testing using a secure tunnel.
-
-### 1. Open the Tunnel
-Run this command in a separate terminal to map the remote Azurite ports to your local machine:
-
-```bash
-az containerapp port-forward \
-  --name <APP_NAME> \
-  --resource-group <RESOURCE_GROUP> \
-  --match-local-port
-```
-
-### 2. Run the Ingress CLI
-Since the tunnel maps the remote ports to `localhost`, you can use your local `dev-cli` without any configuration changes:
-
-```bash
-# In a new terminal
-npm run ingress -- "https://example.com" pdf
-```
-
-Your local CLI will now push jobs to the cloud-hosted Azurite Queue, which the remote Worker will pick up and process. Output files will be saved locally to `scripts/output/`.
-
+Using `--network host` allows the worker container to reach Azurite at `localhost`. You can then use your local `dev-cli` as usual.
