@@ -1,6 +1,6 @@
 # Development Infrastructure: Azure Container Registry (ACR)
 
-This directory contains the Bicep templates and instructions for managing the Azure Container Registry used for development images, specifically the `browser-orchestrator`.
+This directory contains the Bicep templates and instructions for managing the Azure Container Registry used for `browser-orchestrator`.
 
 ## 1. Prerequisites
 
@@ -31,36 +31,6 @@ Authenticate your local Docker client to the ACR:
 # Get the ACR login server (e.g., acr[unique].azurecr.io)
 export ACR_NAME=$(az acr list --resource-group rg-capture-automation-platform-dev --query "[0].name" -o tsv)
 az acr login --name $ACR_NAME
-```
-
-## 4. Build and Push Optimized Dev Image
-
-The `browser-orchestrator` dev image is optimized via a multi-stage Dockerfile to include necessary Playwright dependencies while minimizing final image size.
-
-### Build the Image
-From the **project root**:
-
-```bash
-docker build -t browser-orchestrator:dev -f services/browser-orchestrator/docker/dev/Dockerfile .
-```
-
-### Tag and Push to ACR
-```bash
-# Tag the image for ACR
-export LOGIN_SERVER=$(az acr show --name $ACR_NAME --query loginServer -o tsv)
-docker tag browser-orchestrator:dev $LOGIN_SERVER/browser-orchestrator:dev
-
-# Push to the registry
-docker push $LOGIN_SERVER/browser-orchestrator:dev
-```
-
-## 5. Verification
-
-Verify the image exists in the registry:
-
-```bash
-az acr repository list --name $ACR_NAME --output table
-az acr repository show-tags --name $ACR_NAME --repository browser-orchestrator --output table
 ```
 
 ## Optimization Notes
