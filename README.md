@@ -1,28 +1,89 @@
-# Cloud-Native Capture Automation Platform
+# Capture Automation Platform
 
-**Status:** Phase 2.0 - Unified Azure-Ready Worker
-**Architecture:** Azure (Container Apps, Storage Queues, Table Metadata, Blob Storage)
-**Stack:** TypeScript, Playwright, Node.js, Azurite
+A high-scale, cloud-native browserless web capture service designed for complex automation workflows. This platform provides a robust foundation for capturing, processing, and extracting intelligent data from the web using containerized Playwright instances.
 
-## 🚀 Overview
+## Overview
 
-A full-stack platform for high-fidelity web captures (PDF/Screenshot/Markdown). This project demonstrates a production-grade **Event-Driven Architecture (EDA)** that handles long-running browser automation tasks asynchronously using Azure Storage primitives.
+The Capture Automation Platform is built to handle the "thundering herd" problem and resource-intensive nature of headless browser clusters. It leverages an **Asynchronous Request-Reply** pattern with queue-based load leveling to ensure reliability and scalability, making it ideal for large-scale data extraction and archival tasks.
 
-### Core Objectives
+### Key Architectural Pillars
 
-- **Protocol Parity:** Uses Azurite locally to ensure identical behavior between dev and production.
-- **Operational Excellence:** Unified codebase for all environments via environment-variable driven adapters.
-- **Scale-to-Zero:** A "Zero-Dollar Idle" footprint using Azure Container Apps.
+* **Asynchronous Request-Reply Pattern:** Decouples request ingestion from intensive processing, providing immediate acknowledgment while background workers handle the capture.
+* **Queue-Based Load Leveling:** Utilizes Azure Queue Storage to buffer spikes in traffic, protecting downstream resources and ensuring consistent performance.
+* **Containerized Playwright Environment:** Ensures identical execution environments for browser automation, eliminating client-side rendering inconsistencies and providing a stable platform for complex document rendering.
+* **Scale-to-Zero Compute:** Designed for deployment on Azure Container Apps (ACA), allowing the browser orchestrator to scale dynamically based on queue depth, including scaling to zero to minimize idle costs.
+* **Intelligent Markdown Extraction:** Integrates Mozilla's Readability library to extract clean, structured markdown from complex web pages, optimized for LLM consumption and archival.
 
-## 🏗️ Monorepo Structure
+---
 
-The project uses NPM Workspaces to manage services and shared packages:
+## 🏗️ Architecture
 
-- **[`/services/browser-orchestrator`](./services/browser-orchestrator)**: The core rendering engine (Playwright). Unified Azure SDK-based architecture for all environments.
-- **[`/packages/shared-types`](./packages/shared-types)**: Unified Zod-backed types and schemas used across the system.
-- **[`/infrastructure`](./infrastructure)**: Bicep-based IaC for Azure provisioning.
+The platform follows a microservices-inspired architecture managed within a TypeScript monorepo.
 
-## 🛠️ Getting Started (New Developers)
+```mermaid
+graph TD
+    Client[Automation Client] -->|HTTP POST| Ingress[HTTP Ingress - Azure Functions]
+    Ingress -->|Enqueue Job| Queue[Azure Queue Storage]
+    Ingress -->|Initialize Metadata| Table[Azure Table Storage]
+  
+    subgraph "Compute Layer (ACA)"
+        Worker[Browser Orchestrator Worker]
+    end
+  
+    Queue -->|Dequeue| Worker
+    Worker -->|Execute| Playwright[Playwright / Chromium]
+    Worker -->|Store Result| Blob[Azure Blob Storage]
+    Worker -->|Update Status| Table
+  
+    Client -->|Poll Status| Ingress
+    Ingress -->|Query Metadata| Table
+```
+
+## 📂 Project Structure
+
+```text
+/capture-automation-platform
+├── .github/workflows/         # CI/CD: QA and deployment pipelines (planned)
+├── infrastructure/            # IaC (Azure Resources)
+│   ├── acr.bicep              # Azure Container Registry deployment
+│   └── README.md              # Infrastructure documentation
+├── packages/                  # Shared Logic/Types
+│   └── shared-types/          # Shared job and status interfaces
+├── services/                  # Backend Microservices
+│   └── api-gateway/           # HTTP Ingress (AFA)
+│   └── browser-orchestrator/  # Playwright-based capture service (ACA)
+└── web/                       # UI for manual job submission
+```
+
+---
+
+## 🛠️ Tech Stack
+
+* **Language:** TypeScript (Node.js 20+)
+* **Browser Automation:** Playwright (Chromium)
+* **Cloud Provider:** Microsoft Azure
+  * **Compute:** Azure Container Apps (Worker), Azure Functions (Ingress - *WIP*)
+  * **Storage:** Azure Blob Storage (Output), Azure Queue Storage (Jobs), Azure Table Storage (Metadata)
+* **DevOps:** Docker, Azure Bicep, GitHub Actions
+
+---
+
+## 🚦 Current Status & Roadmap
+
+The project is currently in active development. The core processing engine is functional, and the platform is being prepared for its first full cloud deployment.
+
+- [X] **Shared Type System**: Unified contracts for job orchestration.
+- [X] **Core Worker Engine**: Playwright orchestration and Azure Storage adapters.
+- [X] **Containerization**: Optimized Docker image with Playwright dependencies.
+- [ ] **HTTP Ingress (AFA)**: Azure Functions-based entry point for job submission and status polling.
+- [ ] **Infrastructure-as-Code**: Complete Bicep templates for ACA/AFA/Storage deployment.
+- [ ] **Web UI**: A modern dashboard for manual job submission and visual result inspection.
+
+---
+
+## 💻 Getting Started (Local Development)
+
+The platform is designed to be easily testable locally using Azurite for Azure Storage emulation.
 
 ### Prerequisites
 
@@ -67,19 +128,3 @@ The project uses a unified **Azurite-backed** workflow:
    ```
 
    Example: `npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- https://example.com pdf`
-
-## ✅ Quality Standards
-
-- **Linting**: `npm run lint`
-- **Testing**: `npm test` (requires Azurite for integration tests)
-
-## 🗺️ Phase Roadmap
-
-1. **Phase 1 (Worker Core):** ✅ Core browser logic, Playwright integration, Markdown support.
-2. **Phase 2 (Azure Integration):** ✅ Azurite onboarding, Unified Azure SDK adapters, DLQ/Poison handling.
-3. **Phase 3 (Infrastructure):** 🏗️ Service Bus migration (optional), Bicep for Container Apps.
-4. **Phase 4 (SignalR & Frontend):** 🏗️ Real-time status broadcasting and React dashboard.
-
----
-
-**Author:** Ryan (Updated April 2026)

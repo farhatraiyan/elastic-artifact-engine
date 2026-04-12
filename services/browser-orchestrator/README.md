@@ -1,96 +1,64 @@
-# Browser Orchestrator Service
+# Browser Orchestrator (Capture Worker)
 
-The **Browser Orchestrator** is the core rendering engine of the platform. It uses Playwright to perform high-fidelity web captures and uses Azure Storage (Queue, Table, Blob) for its operational lifecycle.
+The **Browser Orchestrator** is a specialized Node.js worker service responsible for the lifecycle of web capture jobs. It leverages Playwright to orchestrate headless browser instances and implements a decoupled, adapter-based architecture to interface with Azure cloud services.
 
-## ✨ Features
+## 🚀 Core Responsibilities
 
-- **High-Fidelity Captures**: Supports PDF, PNG (Screenshot), and Markdown.
-- **Smart Markdown Extraction**:
-  - **Reader Mode (Default)**: Uses `@mozilla/readability` to extract the main article content.
-  - **Raw Mode**: Full page HTML-to-Markdown conversion.
-- **Pre-Capture Optimization**: Auto-scrolling, banner dismissal, and custom CSS injection.
-- **Unified Architecture**: Same code for Local (via Azurite) and Production (via Azure).
+* **Job Orchestration:** Listens to an Azure Storage Queue for incoming `CaptureJob` messages.
+* **Browser Management:** Manages Chromium instances via Playwright, ensuring fresh contexts for every job to prevent state leakage.
+* **Multi-Format Capture:** Supports high-fidelity PDF, PNG (Full Page), and intelligent Markdown extraction.
+* **Result Persistence:** Uploads captured artifacts to Azure Blob Storage and updates job metadata in Azure Table Storage.
+* **Fault Tolerance:** Implements adaptive backoff for queue polling and graceful shutdown to ensure in-flight jobs are safely abandoned for retry.
+
+## ✨ Key Features
+
+* **Intelligent Reader Mode:** Integrates Mozilla's `Readability` library to extract clean, article-focused Markdown, optimized for LLM processing.
+* **UI Friction Handling:** Automatically attempts to dismiss cookie banners and consent overlays before capture.
+* **Heuristic Content Discovery:** Uses fallback selectors to ensure successful Markdown extraction even when Readability fails.
+* **Concurrency Control:** Configurable parallel job processing to maximize resource utilization on Azure Container Apps.
+* **Auto-Scrolling:** Simulates user scrolling to trigger lazy-loaded images and dynamic content hydration.
 
 ## 🏗️ Architecture
 
-The worker follows a decoupled, adapter-based architecture:
+The service follows a strict interface-driven design found in `src/core/interfaces.ts`. This allows for seamless swapping of providers or storage backends.
 
-- **Core Engine (`src/core/Worker.ts`)**: Orchestrates the job lifecycle.
-- **Capture Adapter (`src/adapters/PlaywrightAdapter.ts`)**: Browser-based rendering.
-- **Azure Adapters (`src/adapters/Azure*`)**: Production-ready implementations for Azure Storage.
-- **Ingress CLI (`scripts/dev-cli.ts`)**: Developer interface for submitting jobs locally.
+* **`Worker`**: The central engine that coordinates between the Queue, Capture, and Storage services.
+* **`PlaywrightAdapter`**: Encapsulates all browser-specific logic, including custom Turndown rules for GFM-compatible Markdown.
+* **`Azure Adapters`**: Specialized implementations for Blob, Queue, and Table storage.
 
-## 📂 Directory Structure
+## 🛠️ Local Development
 
-| Path | Description |
-| :--- | :--- |
-| `src/` | Unified source code for the Worker (Adapters, Core). |
-| `scripts/` | Developer utilities and ingress CLI. |
-| `docker/` | Dockerfiles and Compose configurations for dev/prod. |
-| `tests/` | Comprehensive test suite (Unit & Integration). |
+### Prerequisites
 
-## 🛠️ Prerequisites (Local Development)
+* **Azurite:** Required for local storage emulation.
+* **Docker:** Recommended for running Azurite via the provided compose file.
 
-The worker requires **Azurite** (Azure Storage API emulator) for local development.
+### Commands
 
-### Option A: Docker Compose (Recommended)
-```bash
-# 1. Start the container
-npm run services:up
-
-# 2. Build and initialize (Queue, Blob, Table)
-npm run build
-npm run services:setup
-```
-
-### Option B: Docker (Manual)
-```bash
-docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 mcr.microsoft.com/azure-storage/azurite --skipApiVersionCheck
-```
-
-### Option C: npm
-```bash
-npm install -g azurite
-azurite --silent --location ./data --debug ./data/debug.log --skipApiVersionCheck
-```
+| Command                    | Description                                                                                |
+| :------------------------- | :----------------------------------------------------------------------------------------- |
+| `npm run services:up`    | Starts local Azurite container.                                                            |
+| `npm run services:setup` | Initializes the required containers, queues, and tables in Azurite.                        |
+| `npm run build`          | Compiles the TypeScript source for the worker and scripts.                                 |
+| `npm run dev`            | Starts the worker in development mode (pointing to local Azurite).                         |
+| `npm run ingress`        | Runs the Dev CLI to submit test jobs (e.g.,`npm run ingress -- https://google.com pdf`). |
+| `npm run test`           | Executes unit and integration tests (automatically manages Azurite lifecycle).             |
 
 ## ⚙️ Configuration
 
-| Variable | Description | Default |
-| :--- | :--- | :--- |
-| `AZURE_STORAGE_CONNECTION_STRING` | Connection string for Azure or Azurite. | `UseDevelopmentStorage=true` |
-| `AZURE_STORAGE_BLOB_CONTAINER_NAME` | Name of the Blob container for captures. | `captures` |
-| `AZURE_STORAGE_QUEUE_NAME` | Name of the Queue for jobs. | `jobs` |
-| `AZURE_STORAGE_TABLE_NAME` | Name of the Table for metadata. | `metadata` |
-| `CONCURRENCY` | Maximum simultaneous jobs. | `2` |
-| `ENABLE_CLI` | Enable interactive CLI in TTY. | `true` |
+The service is configured via environment variables:
 
-## 🛠️ Key Scripts
+| Variable                              | Default                        | Description                                                           |
+| :------------------------------------ | :----------------------------- | :-------------------------------------------------------------------- |
+| `AZURE_STORAGE_CONNECTION_STRING`   | `UseDevelopmentStorage=true` | Connection string for Azure Storage.                                  |
+| `CONCURRENCY`                       | `2`                          | Number of simultaneous capture jobs per worker instance.              |
+| `MAX_RETRIES`                       | `5`                          | Maximum number of times a job can be dequeued before being discarded. |
+| `AZURE_STORAGE_BLOB_CONTAINER_NAME` | `captures`                   | Destination container for output files.                               |
+| `AZURE_STORAGE_QUEUE_NAME`          | `jobs`                       | Source queue for capture requests.                                    |
+| `AZURE_STORAGE_TABLE_NAME`          | `metadata`                   | Table name for job status tracking.                                   |
 
-Run these from the service root (`services/browser-orchestrator/`):
+## 🧪 Testing
 
-| Command | Description |
-| :--- | :--- |
-| `npm run build` | Compiles the worker (`dist/`) and scripts (`dist-dev/`). |
-| `npm run dev` | Starts the worker in development mode with interactive CLI. |
-| `npm run start` | Starts the compiled worker. |
-| `npm run services:up` | Starts local infrastructure (Azurite) via Docker Compose in `docker/dev`. |
-| `npm run services:down` | Stops local infrastructure. |
-| `npm run test` | Runs all tests with automated Azurite lifecycle management. |
-| `npm run lint` | Runs ESLint. |
-
-## 🐳 Docker (Image Testing)
-
-To test the worker image locally against the containerized Azurite instance:
-
-1. **Start Azurite**: `npm run services:up`
-2. **Build the Worker**: `docker build -t browser-orchestrator -f services/browser-orchestrator/docker/Dockerfile .`
-3. **Run the Worker**:
-   ```bash
-   docker run --rm \
-     --network host \
-     -e AZURE_STORAGE_CONNECTION_STRING="UseDevelopmentStorage=true" \
-     browser-orchestrator
-   ```
-
-Using `--network host` allows the worker container to reach Azurite at `localhost`. You can then use your local `dev-cli` as usual.
+* **Unit Tests:** Located in `tests/Worker.test.ts`, uses mocks to verify orchestration logic.
+* **Adapter Tests:** `tests/PlaywrightAdapter.test.ts` verifies browser behavior against data URLs.
+* **Integration Tests:** `tests/Integration.test.ts` runs a full end-to-end flow from queue ingestion to blob storage using Azurite.
