@@ -8,16 +8,19 @@ COPY package*.json ./
 COPY tsconfig.base.json ./
 COPY services/browser-orchestrator/package.json ./services/browser-orchestrator/
 COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/azure-adapters/package.json ./packages/azure-adapters/
 
 # Install all dependencies
 RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY packages/shared-types ./packages/shared-types
+COPY packages/azure-adapters ./packages/azure-adapters
 COPY services/browser-orchestrator ./services/browser-orchestrator
 
-# Build shared types and the worker
+# Build shared types, adapters, and the worker
 RUN npm run build --workspace @capture-automation-platform/shared-types
+RUN npm run build --workspace @capture-automation-platform/azure-adapters
 RUN npm run build --workspace @capture-automation-platform/browser-orchestrator
 
 # Stage 2: Final Image
@@ -59,6 +62,8 @@ COPY --from=builder /app/services/browser-orchestrator/package.json ./services/b
 COPY --from=builder /app/services/browser-orchestrator/dist ./services/browser-orchestrator/dist
 COPY --from=builder /app/packages/shared-types/package.json ./packages/shared-types/
 COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
+COPY --from=builder /app/packages/azure-adapters/package.json ./packages/azure-adapters/
+COPY --from=builder /app/packages/azure-adapters/dist ./packages/azure-adapters/dist
 
 # Copy entrypoint script
 COPY services/browser-orchestrator/docker/docker-entrypoint.sh ./docker-entrypoint.sh

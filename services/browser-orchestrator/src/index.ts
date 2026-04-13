@@ -1,6 +1,8 @@
-import { AzureBlobStorageAdapter } from './adapters/AzureBlobStorageAdapter.js';
-import { AzureQueueAdapter } from './adapters/AzureQueueAdapter.js';
-import { AzureTableMetadataAdapter } from './adapters/AzureTableMetadataAdapter.js';
+import {
+  AzureBlobStorageAdapter,
+  AzureQueueAdapter,
+  AzureTableMetadataAdapter
+} from '@capture-automation-platform/azure-adapters';
 import { PlaywrightAdapter } from './adapters/PlaywrightAdapter.js';
 import { Worker } from './core/Worker.js';
 import { CaptureJob } from '@capture-automation-platform/shared-types';

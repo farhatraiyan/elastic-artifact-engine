@@ -90,7 +90,7 @@ describe('Worker', () => {
 
   test('should process a job successfully', async () => {
     const statusUpdates: string[] = [];
-    mockMetadata.updateStatus = async (id, status) => {
+    mockMetadata.updateStatus = async (id: string, status: string) => {
       statusUpdates.push(status);
     };
 
@@ -115,7 +115,7 @@ describe('Worker', () => {
 
   test('should handle capture failure and update status to Failed', async () => {
     const statusUpdates: string[] = [];
-    mockMetadata.updateStatus = async (id, status) => {
+    mockMetadata.updateStatus = async (id: string, status: string) => {
       statusUpdates.push(status);
     };
 
@@ -141,7 +141,7 @@ describe('Worker', () => {
 
   test('should abandon in-flight jobs on stop', async () => {
     const abandonedMessages: string[] = [];
-    mockQueue.abandon = async (msg) => {
+    mockQueue.abandon = async (msg: QueueMessage<CaptureJob>) => {
       abandonedMessages.push(msg.id);
     };
 

@@ -7,9 +7,11 @@ import { QueueClient } from '@azure/storage-queue';
 
 import { CaptureJob } from '@capture-automation-platform/shared-types';
 
-import { AzureBlobStorageAdapter } from '../src/adapters/AzureBlobStorageAdapter.js';
-import { AzureQueueAdapter } from '../src/adapters/AzureQueueAdapter.js';
-import { AzureTableMetadataAdapter } from '../src/adapters/AzureTableMetadataAdapter.js';
+import {
+  AzureBlobStorageAdapter,
+  AzureQueueAdapter,
+  AzureTableMetadataAdapter
+} from '@capture-automation-platform/azure-adapters';
 
 describe('Azure Adapters (Integration with Azurite)', () => {
   const CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || 'UseDevelopmentStorage=true';

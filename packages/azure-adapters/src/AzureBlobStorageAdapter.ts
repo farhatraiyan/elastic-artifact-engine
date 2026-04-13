@@ -1,5 +1,5 @@
 import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
-import { StorageService } from '../core/interfaces.js';
+import { StorageService } from './interfaces.js';
 
 export class AzureBlobStorageAdapter implements StorageService {
   private containerClient: ContainerClient;

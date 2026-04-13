@@ -23,6 +23,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       shared-types: ${{ steps.filter.outputs.shared-types }}
+      azure-adapters: ${{ steps.filter.outputs.azure-adapters }}
       core: ${{ steps.filter.outputs.core }}
       lintable: ${{ steps.filter.outputs.lintable }}
     steps:
@@ -33,6 +34,8 @@ jobs:
           filters: |
             shared-types:
               - 'packages/shared-types/**'
+            azure-adapters:
+              - 'packages/azure-adapters/**'
             core:
               - 'services/browser-orchestrator/**'
             lintable:
@@ -84,9 +87,11 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
-      - name: Build Shared Types
-        run: npm run build --workspace @capture-automation-platform/shared-types
+      - name: Build Project
+        run: npm run build
 
-      - name: Run Tests
-        working-directory: services/browser-orchestrator
-        run: npm test
+      - name: Run Azure Adapter Tests
+        run: npm test --workspace @capture-automation-platform/azure-adapters
+
+      - name: Run Worker Tests
+        run: npm test --workspace @capture-automation-platform/browser-orchestrator

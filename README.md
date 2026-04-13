@@ -48,6 +48,7 @@ graph TD
 │   ├── acr.bicep              # Azure Container Registry deployment
 │   └── README.md              # Infrastructure documentation
 ├── packages/                  # Shared Logic/Types
+│   ├── azure-adapters/        # Shared Azure infrastructure logic
 │   └── shared-types/          # Shared job and status interfaces
 ├── services/                  # Backend Microservices
 │   └── api-gateway/           # HTTP Ingress (AFA)

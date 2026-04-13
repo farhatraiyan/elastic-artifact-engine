@@ -7,10 +7,12 @@ import { TableClient } from '@azure/data-tables';
 import { QueueClient } from '@azure/storage-queue';
 
 import { CaptureJob, JobStatus } from '@capture-automation-platform/shared-types';
+import {
+  AzureBlobStorageAdapter,
+  AzureQueueAdapter,
+  AzureTableMetadataAdapter
+} from '@capture-automation-platform/azure-adapters';
 
-import { AzureBlobStorageAdapter } from '../src/adapters/AzureBlobStorageAdapter.js';
-import { AzureQueueAdapter } from '../src/adapters/AzureQueueAdapter.js';
-import { AzureTableMetadataAdapter } from '../src/adapters/AzureTableMetadataAdapter.js';
 import { PlaywrightAdapter } from '../src/adapters/PlaywrightAdapter.js';
 import { Worker } from '../src/core/Worker.js';
 

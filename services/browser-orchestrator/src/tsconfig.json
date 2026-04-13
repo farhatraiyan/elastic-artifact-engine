@@ -10,6 +10,9 @@
   "references": [
     {
       "path": "../../../packages/shared-types"
+    },
+    {
+      "path": "../../../packages/azure-adapters"
     }
   ]
 }

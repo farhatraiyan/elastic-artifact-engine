@@ -20,11 +20,11 @@ The **Browser Orchestrator** is a specialized Node.js worker service responsible
 
 ## 🏗️ Architecture
 
-The service follows a strict interface-driven design found in `src/core/interfaces.ts`. This allows for seamless swapping of providers or storage backends.
+The service follows a strict interface-driven design. It leverages the shared infrastructure package for Azure interactions, keeping the worker focused on orchestration and capture logic.
 
 * **`Worker`**: The central engine that coordinates between the Queue, Capture, and Storage services.
 * **`PlaywrightAdapter`**: Encapsulates all browser-specific logic, including custom Turndown rules for GFM-compatible Markdown.
-* **`Azure Adapters`**: Specialized implementations for Blob, Queue, and Table storage.
+* **`Azure Adapters`**: Integrated from `@capture-automation-platform/azure-adapters` for Blob, Queue, and Table storage.
 
 ## 🛠️ Local Development
 

@@ -19,7 +19,7 @@ az group create --name rg-capture-automation-platform-dev --location eastus
 # Deploy the ACR
 az deployment group create \
   --resource-group rg-capture-automation-platform-dev \
-  --template-file infrastructure/environments/dev/acr.bicep \
+  --template-file infrastructure/acr.bicep \
   --parameters acrSku=Basic
 ```
 

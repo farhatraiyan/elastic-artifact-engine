@@ -11,7 +11,8 @@ export default tseslint.config(
           './services/browser-orchestrator/src/tsconfig.json',
           './services/browser-orchestrator/scripts/tsconfig.json',
           './services/browser-orchestrator/tests/tsconfig.json',
-          './packages/shared-types/tsconfig.json'
+          './packages/shared-types/tsconfig.json',
+          './packages/azure-adapters/tsconfig.json'
         ],
         extraFileExtensions: ['.test.ts'],
         tsconfigRootDir: import.meta.dirname,
@@ -47,7 +48,9 @@ export default tseslint.config(
       '**/dist-*/**',
       '**/node_modules/**',
       '**/*.tsbuildinfo',
-      'eslint.config.js'
+      'eslint.config.js',
+      'packages/azure-adapters/src/**/*.js',
+      'packages/azure-adapters/src/**/*.d.ts'
     ],
   }
 );

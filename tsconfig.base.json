@@ -14,6 +14,7 @@
     "types": ["node"],
     "paths": {
       "@capture-automation-platform/shared-types": ["./packages/shared-types/src/index.ts"],
+      "@capture-automation-platform/azure-adapters": ["./packages/azure-adapters/src/index.ts"],
       "@capture-automation-platform/browser-orchestrator": ["./services/browser-orchestrator/src/index.ts"]
     }
   }

@@ -1,5 +1,5 @@
 import { TableClient } from '@azure/data-tables';
-import { MetadataService } from '../core/interfaces.js';
+import { MetadataService } from './interfaces.js';
 import { JobStatus } from '@capture-automation-platform/shared-types';
 
 export class AzureTableMetadataAdapter implements MetadataService {

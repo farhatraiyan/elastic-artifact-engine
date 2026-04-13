@@ -1,5 +1,5 @@
 import { QueueClient } from '@azure/storage-queue';
-import { QueueService } from '../core/interfaces.js';
+import { QueueService } from './interfaces.js';
 import { QueueMessage } from '@capture-automation-platform/shared-types';
 import { setTimeout } from 'timers/promises';
 
