@@ -1,13 +1,15 @@
 import { QueueClient } from '@azure/storage-queue';
-import { QueueService } from './interfaces.js';
 import { QueueMessage } from '@capture-automation-platform/shared-types';
+import { QueueService } from '../core/interfaces.js';
 import { setTimeout } from 'timers/promises';
+import { z } from 'zod';
 
 export class AzureQueueAdapter<T> implements QueueService<T> {
-  private readonly MIN_DELAY = 200;
   private readonly MAX_DELAY = 30000;
+  private readonly MIN_DELAY = 200;
   private maxRetries: number;
   private queueClient: QueueClient;
+  private schema?: z.ZodType<T>;
 
   private async delay(delay: number, signal?: AbortSignal): Promise<void> {
     try {
@@ -15,9 +17,10 @@ export class AzureQueueAdapter<T> implements QueueService<T> {
     } catch { /* ignore */ }
   }
 
-  constructor(connectionString: string, queueName: string, maxRetries: number = 5) {
+  constructor(connectionString: string, queueName: string, maxRetries: number = 5, schema?: z.ZodType<T>) {
     this.queueClient = new QueueClient(connectionString, queueName);
     this.maxRetries = maxRetries;
+    this.schema = schema;
   }
 
   async abandon(message: QueueMessage<T>): Promise<void> {
@@ -60,14 +63,23 @@ export class AzureQueueAdapter<T> implements QueueService<T> {
 
       // Reset delay
       currentDelay = this.MIN_DELAY;
-      let queueMessage: QueueMessage<T>;
+      let messageBody: T;
 
       try {
-        queueMessage = {
-          body: JSON.parse(msg.messageText),
-          id: msg.messageId,
-          popReceipt: msg.popReceipt
-        };
+        const body = JSON.parse(msg.messageText);
+
+        if (this.schema) {
+          const result = this.schema.safeParse(body);
+
+          if (!result.success) {
+            await this.queueClient.deleteMessage(msg.messageId, msg.popReceipt);
+            continue;
+          }
+
+          messageBody = result.data;
+        } else {
+          messageBody = body as T;
+        }
       } catch {
         // eslint-disable-next-line no-console
         console.error('Failed to parse message body:', msg.messageText);
@@ -75,7 +87,11 @@ export class AzureQueueAdapter<T> implements QueueService<T> {
         continue;
       }
 
-      yield queueMessage;
+      yield {
+        body: messageBody,
+        id: msg.messageId,
+        popReceipt: msg.popReceipt
+      };
     }
   }
 }

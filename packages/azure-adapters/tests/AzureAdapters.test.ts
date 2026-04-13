@@ -5,7 +5,7 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import { TableClient } from '@azure/data-tables';
 import { QueueClient } from '@azure/storage-queue';
 
-import { CaptureJob } from '@capture-automation-platform/shared-types';
+import { CaptureJob, CaptureJobSchema } from '@capture-automation-platform/shared-types';
 
 import {
   AzureBlobStorageAdapter,
@@ -19,7 +19,7 @@ describe('Azure Adapters (Integration with Azurite)', () => {
   const BLOB_CONTAINER_NAME = 'test-captures';
   const TABLE_NAME = 'TestMetadata';
 
-  const queue = new AzureQueueAdapter<CaptureJob>(CONNECTION_STRING, QUEUE_NAME);
+  const queue = new AzureQueueAdapter<CaptureJob>(CONNECTION_STRING, QUEUE_NAME, 5, CaptureJobSchema);
   const storage = new AzureBlobStorageAdapter(CONNECTION_STRING, BLOB_CONTAINER_NAME);
   const metadata = new AzureTableMetadataAdapter(CONNECTION_STRING, TABLE_NAME);
 

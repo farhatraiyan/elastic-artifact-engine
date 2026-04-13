@@ -5,7 +5,7 @@ import {
 } from '@capture-automation-platform/azure-adapters';
 import { PlaywrightAdapter } from './adapters/PlaywrightAdapter.js';
 import { Worker } from './core/Worker.js';
-import { CaptureJob } from '@capture-automation-platform/shared-types';
+import { CaptureJob, CaptureJobSchema } from '@capture-automation-platform/shared-types';
 
 async function main() {
   // Configuration
@@ -21,7 +21,7 @@ async function main() {
   // Adapters
   const capture = new PlaywrightAdapter();
   const metadata = new AzureTableMetadataAdapter(CONNECTION_STRING, TABLE_NAME);
-  const queue = new AzureQueueAdapter<CaptureJob>(CONNECTION_STRING, QUEUE_NAME, MAX_RETRIES);
+  const queue = new AzureQueueAdapter<CaptureJob>(CONNECTION_STRING, QUEUE_NAME, MAX_RETRIES, CaptureJobSchema);
   const storage = new AzureBlobStorageAdapter(CONNECTION_STRING, BLOB_CONTAINER_NAME);
 
   // Worker
