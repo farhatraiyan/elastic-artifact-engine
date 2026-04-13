@@ -12,7 +12,8 @@ export default tseslint.config(
           './services/browser-orchestrator/scripts/tsconfig.json',
           './services/browser-orchestrator/tests/tsconfig.json',
           './packages/shared-types/tsconfig.json',
-          './packages/azure-adapters/tsconfig.json'
+          './packages/azure-adapters/tsconfig.json',
+          './services/ingress-api/tsconfig.json'
         ],
         extraFileExtensions: ['.test.ts'],
         tsconfigRootDir: import.meta.dirname,

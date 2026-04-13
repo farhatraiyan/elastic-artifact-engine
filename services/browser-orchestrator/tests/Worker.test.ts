@@ -34,22 +34,25 @@ describe('Worker', () => {
 
   beforeEach(() => {
     mockCapture = {
-      init: async () => {},
       capture: async () => Buffer.from('fake-pdf'),
-      close: async () => {}
+      close: async () => {},
+      init: async () => {}
     };
     mockMetadata = {
+      getJobState: async () => undefined,
       updateStatus: async () => {}
     };
     mockStorage = {
+      generateReadSasUrl: async () => 'http://sas-url',
       save: async () => '/path/to/job-1.pdf'
     };
     mockQueue = {
-      complete: async () => {},
       abandon: async () => {},
+      complete: async () => {},
       listen: async function* () {
         yield sampleMessage;
-      }
+      },
+      push: async () => {}
     };
 
     worker = new Worker(mockCapture, mockMetadata, mockQueue, mockStorage);

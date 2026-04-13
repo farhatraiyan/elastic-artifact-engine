@@ -1,4 +1,5 @@
-import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
+import { BlobServiceClient, ContainerClient, BlobSASPermissions } from '@azure/storage-blob';
+
 import { StorageService } from '../core/interfaces.js';
 
 export class AzureBlobStorageAdapter implements StorageService {
@@ -18,6 +19,17 @@ export class AzureBlobStorageAdapter implements StorageService {
   constructor(connectionString: string, containerName: string) {
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
     this.containerClient = blobServiceClient.getContainerClient(containerName);
+  }
+
+  async generateReadSasUrl(filename: string, expiryMinutes: number): Promise<string> {
+    const blobClient = this.containerClient.getBlobClient(filename);
+
+    const sasUrl = await blobClient.generateSasUrl({
+      permissions: BlobSASPermissions.parse('r'),
+      expiresOn: new Date(new Date().valueOf() + expiryMinutes * 60 * 1000)
+    });
+
+    return sasUrl;
   }
 
   async save(filename: string, data: Buffer): Promise<string> {

@@ -16,16 +16,19 @@
     "build": "tsc -b",
     "build:clean": "tsc -b --clean && npm run clean",
     "clean": "tsc -b --clean && npm run clean --workspaces --if-present && find . -type f \\( -name '*.tsbuildinfo' -o -name '*.d.ts.map' -o -name '*.js.map' -o -name '*.d.ts' \\) -not -path '*/node_modules/*' -delete && find . -mindepth 3 -type f -name '*.js' -not -path '*/node_modules/*' -delete",
-    "lint": "npm run lint --workspaces"
+    "lint": "npm run lint --workspaces",
+    "platform:up": "npm run services:up --workspace @capture-automation-platform/browser-orchestrator && concurrently -k -p '[{name}]' -n 'API,WORKER' -c 'cyan,magenta' \"npm run start --workspace @capture-automation-platform/ingress-api\" \"npm run start --workspace @capture-automation-platform/browser-orchestrator\"",
+    "platform:down": "npm run services:down --workspace @capture-automation-platform/browser-orchestrator",
+    "test:system": "node --import tsx --test --test-timeout=60000 tests/System.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.2",
+    "concurrently": "^9.2.1",
     "eslint": "^10.1.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.57.2"
-  },
-  "dependencies": {}
+  }
 }

@@ -29,6 +29,7 @@ GEMINI.md
 *.swp
 
 # Environment Secrets (Azure Phase 2 Preparation)
+local.settings.json
 .env
 .env.local
 .env.*.local

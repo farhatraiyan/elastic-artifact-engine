@@ -44,7 +44,7 @@ describe('Azure Adapters (Integration with Azurite)', () => {
   describe('AzureQueueAdapter', () => {
     it('should enqueue and receive a message', async () => {
       const job: CaptureJob = {
-        id: 'test-job',
+        id: 'test-job-listen',
         url: 'https://example.com',
         type: 'pdf',
         retryCount: 0
@@ -59,7 +59,27 @@ describe('Azure Adapters (Integration with Azurite)', () => {
 
       assert.strictEqual(result.done, false);
       assert.ok(result.value);
-      assert.strictEqual(result.value.body.id, 'test-job');
+      assert.strictEqual(result.value.body.id, 'test-job-listen');
+
+      await queue.complete(result.value);
+    });
+
+    it('should push a message', async () => {
+      const job: CaptureJob = {
+        id: 'test-job-push',
+        url: 'https://example.com/push',
+        type: 'png',
+        retryCount: 0
+      };
+
+      await queue.push(job);
+
+      const iterator = queue.listen();
+      const result = await iterator.next();
+
+      assert.strictEqual(result.done, false);
+      assert.ok(result.value);
+      assert.strictEqual(result.value.body.id, 'test-job-push');
 
       await queue.complete(result.value);
     });
@@ -73,12 +93,32 @@ describe('Azure Adapters (Integration with Azurite)', () => {
       assert.ok(url.includes('test.txt'));
       assert.ok(url.startsWith('http'));
     });
+
+    it('should generate a SAS URL', async () => {
+      const data = Buffer.from('sas test');
+      await storage.save('sas-test.txt', data);
+
+      const sasUrl = await storage.generateReadSasUrl('sas-test.txt', 15);
+
+      assert.ok(sasUrl.includes('sas-test.txt'));
+      assert.ok(sasUrl.includes('sig=')); // Signature should be present
+    });
   });
 
   describe('AzureTableMetadataAdapter', () => {
-    it('should update status in table', async () => {
-      await metadata.updateStatus('test-job', 'Processing');
-      // Success is implied if no error is thrown
+    it('should update status and retrieve state', async () => {
+      const jobId = 'test-job-state';
+      await metadata.updateStatus(jobId, 'Processing', 'http://output.com');
+
+      const state = await metadata.getJobState(jobId);
+      assert.ok(state);
+      assert.strictEqual(state.status, 'Processing');
+      assert.strictEqual(state.outputUrl, 'http://output.com');
+    });
+
+    it('should return undefined for non-existent job', async () => {
+      const state = await metadata.getJobState('non-existent');
+      assert.strictEqual(state, undefined);
     });
   });
 });

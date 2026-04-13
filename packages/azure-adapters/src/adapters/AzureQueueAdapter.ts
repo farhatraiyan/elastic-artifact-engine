@@ -1,8 +1,9 @@
 import { QueueClient } from '@azure/storage-queue';
 import { QueueMessage } from '@capture-automation-platform/shared-types';
-import { QueueService } from '../core/interfaces.js';
 import { setTimeout } from 'timers/promises';
 import { z } from 'zod';
+
+import { QueueService } from '../core/interfaces.js';
 
 export class AzureQueueAdapter<T> implements QueueService<T> {
   private readonly MAX_DELAY = 30000;
@@ -93,5 +94,9 @@ export class AzureQueueAdapter<T> implements QueueService<T> {
         popReceipt: msg.popReceipt
       };
     }
+  }
+
+  async push(message: T): Promise<void> {
+    await this.queueClient.sendMessage(JSON.stringify(message));
   }
 }
