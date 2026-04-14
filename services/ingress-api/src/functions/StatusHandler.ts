@@ -24,7 +24,7 @@ export class StatusHandler {
         return { jsonBody: { error: 'Job not found' }, status: 404 };
       }
 
-      const response: any = {
+      const response: Record<string, unknown> = {
         jobId,
         status: state.status,
         updatedAt: state.updatedAt
@@ -48,7 +48,7 @@ export class StatusHandler {
         jsonBody: response,
         status: 200
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       context.error(`Error in status function for jobId ${jobId}:`, error);
 
       return {

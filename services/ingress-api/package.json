@@ -2,7 +2,7 @@
   "name": "@capture-automation-platform/ingress-api",
   "version": "1.0.0",
   "type": "module",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc -b",
     "clean": "rm -rf dist* **/*.tsbuildinfo **/*.d.ts.map **/*.js.map",
@@ -13,8 +13,7 @@
   "dependencies": {
     "@azure/functions": "^4.6.0",
     "@capture-automation-platform/shared-types": "*",
-    "@capture-automation-platform/azure-adapters": "*",
-    "zod": "^4.3.6"
+    "@capture-automation-platform/azure-adapters": "*"
   },
   "devDependencies": {
     "azure-functions-core-tools": "^4.0.6610",

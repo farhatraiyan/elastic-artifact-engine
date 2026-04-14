@@ -7,15 +7,14 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        project: [
-          './services/browser-orchestrator/src/tsconfig.json',
-          './services/browser-orchestrator/scripts/tsconfig.json',
-          './services/browser-orchestrator/tests/tsconfig.json',
-          './packages/shared-types/tsconfig.json',
-          './packages/azure-adapters/tsconfig.json',
-          './services/ingress-api/tsconfig.json'
-        ],
-        extraFileExtensions: ['.test.ts'],
+        projectService: {
+          allowDefaultProject: [
+            'services/browser-orchestrator/scripts/*.ts',
+            'services/browser-orchestrator/tests/*.test.ts',
+            'services/ingress-api/tests/*.test.ts',
+            'packages/azure-adapters/tests/*.test.ts'
+          ],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },

@@ -1,5 +1,9 @@
 import { JobStatus, QueueMessage, JobState } from '@capture-automation-platform/shared-types';
 
+export interface Schema<T> {
+  safeParse(data: unknown): { success: true; data: T } | { success: false; error: unknown };
+}
+
 export interface MetadataService {
   getJobState(jobId: string): Promise<JobState | undefined>;
   updateStatus(jobId: string, status: JobStatus, outputUrl?: string, error?: string): Promise<void>;

@@ -88,7 +88,7 @@ describe('Ingress API Functions (Unit Tests)', () => {
 
     const res = await statusHandler.handle(req, mockContext);
     assert.strictEqual(res.status, 200);
-    const body = res.jsonBody as any;
+    const body = res.jsonBody as Record<string, unknown>;
     assert.strictEqual(body.status, 'Completed');
     assert.strictEqual(body.downloadUrl, 'http://sas-url');
   });

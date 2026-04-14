@@ -16,7 +16,7 @@ export class CaptureHandler {
     context.log(`Http function processed request for url: "${request.url}"`);
 
     try {
-      const body = await request.json() as any;
+      const body = await request.json() as Record<string, unknown>;
 
       // Validate request
       const validationResult = CaptureJobSchema.safeParse({
@@ -46,7 +46,7 @@ export class CaptureHandler {
         },
         status: 202
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       context.error('Error in capture function:', error);
 
       return {

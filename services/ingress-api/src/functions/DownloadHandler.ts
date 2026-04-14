@@ -48,7 +48,7 @@ export class DownloadHandler {
         },
         status: 302
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       context.error(`Error in download function for jobId ${jobId}:`, error);
 
       return {
