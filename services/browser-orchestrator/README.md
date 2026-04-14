@@ -35,14 +35,14 @@ The service follows a strict interface-driven design. It leverages the shared in
 
 ### Commands
 
+Note: Full platform orchestration (Azurite, API, Docker) has been moved to the project root.
+
 | Command                    | Description                                                                                |
 | :------------------------- | :----------------------------------------------------------------------------------------- |
-| `npm run services:up`    | Starts local Azurite container.                                                            |
-| `npm run services:setup` | Initializes the required containers, queues, and tables in Azurite.                        |
 | `npm run build`          | Compiles the TypeScript source for the worker and scripts.                                 |
-| `npm run dev`            | Starts the worker in development mode (pointing to local Azurite).                         |
-| `npm run ingress`        | Runs the Dev CLI to submit test jobs (e.g.,`npm run ingress -- https://google.com pdf`). |
-| `npm run test`           | Executes unit and integration tests (automatically manages Azurite lifecycle).             |
+| `npm run dev`            | Starts the worker locally using `tsx` (assumes Azurite is running via root `platform:up`). |
+| `npm run ingress`        | Runs the Dev CLI to submit test jobs (e.g.,`npm run ingress -- https://example.com pdf`).  |
+| `npm test`               | Executes isolated workspace tests using `Procfile.test`.|
 
 ## ⚙️ Configuration
 

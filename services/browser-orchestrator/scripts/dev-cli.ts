@@ -38,7 +38,7 @@ async function main() {
 
   // 2. Ensure resources exist (Shared with worker setup)
   if (CONNECTION_STRING.includes('UseDevelopmentStorage=true')) {
-    const { setup } = await import('./setup-azurite.js');
+    const { setup } = await import('../../../scripts/setup-azurite.js');
 
     await setup();
   } else {

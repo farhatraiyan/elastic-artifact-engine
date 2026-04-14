@@ -89,9 +89,7 @@ The platform is designed to be easily testable locally using Azurite for Azure S
 ### Prerequisites
 
 - **Node.js**: v20+
-- **Azurite**: Required for local storage/queue emulation.
-  - Recommended: `npm run services:up --workspace @capture-automation-platform/browser-orchestrator`
-  - Manual: `docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 mcr.microsoft.com/azure-storage/azurite --skipApiVersionCheck`
+- **Docker**: Required for Azurite storage emulation and containerized worker testing.
 - **Playwright Browsers**: `npx playwright install chromium`
 
 ### Installation
@@ -113,19 +111,34 @@ npm run build
 
 ## 🏃 Running the System
 
-The project uses a unified **Azurite-backed** workflow:
+The project uses a unified **Foreman-backed** orchestration workflow for local development:
 
-1. **Start Azurite**:
-   ```bash
-   npm run services:up --workspace @capture-automation-platform/browser-orchestrator
-   ```
-2. **Start Worker**:
-   ```bash
-   npm run dev --workspace @capture-automation-platform/browser-orchestrator
-   ```
-3. **Submit Jobs (CLI)**:
-   ```bash
-   npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- <url> [type]
-   ```
+### 1. Local Development (Host)
+Starts Azurite (via Docker), the Ingress API, and the Browser Orchestrator worker natively on your host machine with auto-setup.
 
-   Example: `npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- https://example.com pdf`
+```bash
+npm run platform:up
+```
+
+### 2. Containerized Testing (Docker)
+Builds the worker Docker image and runs it attached to your host network, identical to production.
+
+```bash
+npm run platform:docker
+```
+
+### 3. Graceful Teardown
+To cleanly stop all containers and surgically kill any lingering background processes:
+
+```bash
+npm run platform:down
+```
+
+### 4. Submit Jobs (CLI)
+While the platform is running, submit jobs using the dev CLI:
+
+```bash
+npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- <url> [type]
+```
+
+Example: `npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- https://example.com pdf`

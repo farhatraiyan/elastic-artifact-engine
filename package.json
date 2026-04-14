@@ -12,13 +12,17 @@
   },
   "scripts": {
     "test": "npm run build && npm test --workspaces --if-present",
-    "posttest": "npm run clean",
     "build": "tsc -b",
+    "build:docker": "docker build -t browser-orchestrator -f docker/browser-orchestrator/Dockerfile .",
     "build:clean": "tsc -b --clean && npm run clean",
-    "clean": "tsc -b --clean && npm run clean --workspaces --if-present && find . -type f \\( -name '*.tsbuildinfo' -o -name '*.d.ts.map' -o -name '*.js.map' -o -name '*.d.ts' \\) -not -path '*/node_modules/*' -delete && find . -mindepth 3 -type f -name '*.js' -not -path '*/node_modules/*' -delete",
+    "clean": "tsc -b --clean && npm run clean --workspaces --if-present && find . -type f \\( -name '*.tsbuildinfo' -o -name '*.d.ts.map' -o -name '*.js.map' -o -name '*.d.ts' -o -name '*.log' \\) -not -path '*/node_modules/*' -delete && find . -mindepth 3 -type f -name '*.js' -not -path '*/node_modules/*' -delete",
     "lint": "npm run lint --workspaces",
-    "platform:up": "npm run services:up --workspace @capture-automation-platform/browser-orchestrator && concurrently -k -p '[{name}]' -n 'API,WORKER' -c 'cyan,magenta' \"npm run start --workspace @capture-automation-platform/ingress-api\" \"npm run start --workspace @capture-automation-platform/browser-orchestrator\"",
-    "platform:down": "npm run services:down --workspace @capture-automation-platform/browser-orchestrator",
+    "platform:setup": "tsx scripts/setup-azurite.ts",
+    "services:up": "docker compose -f docker/azurite/docker-compose.yml up -d",
+    "services:down": "docker compose -f docker/azurite/docker-compose.yml down",
+    "platform:up": "nf start --procfile Procfile.dev",
+    "platform:docker": "nf start --procfile Procfile.docker",
+    "platform:down": "tsx scripts/teardown.ts",
     "test:system": "node --import tsx --test --test-timeout=60000 tests/System.test.ts"
   },
   "devDependencies": {
@@ -27,8 +31,10 @@
     "@typescript-eslint/parser": "^8.57.2",
     "concurrently": "^9.2.1",
     "eslint": "^10.1.0",
+    "foreman": "^3.0.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.57.2"
+    "typescript-eslint": "^8.57.2",
+    "wait-on": "^9.0.5"
   }
 }

@@ -1,0 +1,3 @@
+infra:   docker compose -f docker/azurite/docker-compose.yml up
+api:     wait-on tcp:10000 && npm run platform:setup && npm run start --workspace @capture-automation-platform/ingress-api
+worker:  wait-on tcp:10000 && npm run start --workspace @capture-automation-platform/browser-orchestrator

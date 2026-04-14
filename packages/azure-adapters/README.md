@@ -45,9 +45,9 @@ npm run build --workspace @capture-automation-platform/azure-adapters
 ```
 
 ### Testing
-This package includes unit tests that run against **Azurite**. Ensure Azurite is running before executing tests:
+This package includes unit tests that run against **Azurite**. Running the test command will use `Procfile.test` integration to automatically spin up and tear down Azurite containers:
 
 ```bash
-# Run tests
-node --test packages/azure-adapters/dist/tests/*.test.js
+# Run tests (handles Azurite automatically)
+npm test
 ```

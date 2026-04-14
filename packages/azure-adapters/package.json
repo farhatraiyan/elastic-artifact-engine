@@ -8,7 +8,7 @@
     "build": "tsc -b",
     "clean": "rm -rf dist* **/*.tsbuildinfo **/*.d.ts.map **/*.js.map",
     "lint": "eslint src tests",
-    "test": "npm run services:up --workspace @capture-automation-platform/browser-orchestrator && (node --test dist/tests/*.test.js) && npm run services:down --workspace @capture-automation-platform/browser-orchestrator"
+    "test": "npx nf start --procfile Procfile.test"
   },
   "dependencies": {
     "@azure/data-tables": "^13.3.2",
