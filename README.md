@@ -51,8 +51,8 @@ graph TD
 │   ├── azure-adapters/        # Shared Azure infrastructure logic
 │   └── shared-types/          # Shared job and status interfaces
 ├── services/                  # Backend Microservices
-│   └── api-gateway/           # HTTP Ingress (AFA)
 │   └── browser-orchestrator/  # Playwright-based capture service (ACA)
+│   └── ingress-api/           # HTTP Ingress (AFA)
 └── web/                       # UI for manual job submission
 ```
 
