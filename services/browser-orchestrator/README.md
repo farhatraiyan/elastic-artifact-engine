@@ -39,10 +39,12 @@ Note: Full platform orchestration (Azurite, API, Docker) has been moved to the p
 
 | Command                    | Description                                                                                |
 | :------------------------- | :----------------------------------------------------------------------------------------- |
-| `npm run build`          | Compiles the TypeScript source for the worker and scripts.                                 |
-| `npm run dev`            | Starts the worker locally using `tsx` (assumes Azurite is running via root `platform:up`). |
+| `npm run build`          | Compiles the core TypeScript source (`src`) for the worker.                                |
+| `npm run dev`            | Starts the worker locally using `tsx` (assumes Azurite is running via root `azurite:up`).  |
 | `npm run ingress`        | Runs the Dev CLI to submit test jobs (e.g.,`npm run ingress -- https://example.com pdf`).  |
-| `npm test`               | Executes isolated workspace tests using `Procfile.test`.|
+| `npm run start`          | Launches the worker in the background via PM2.                                             |
+| `npm run orchestrator:docker:run` | Launches the worker via a Docker container on the host network.                   |
+| `npm test`               | Executes isolated workspace tests directly from source using `tsx`.                       |
 
 ## ⚙️ Configuration
 

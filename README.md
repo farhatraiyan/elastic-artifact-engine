@@ -109,32 +109,25 @@ Always build the shared types first, as all other services depend on them:
 npm run build
 ```
 
-## 🏃 Running the System
+## 🏃 Running the Platform
 
-The project uses a unified **Foreman-backed** orchestration workflow for local development:
+The platform is designed to be easily testable locally using Azurite for Azure Storage emulation and **PM2** for background process management.
 
-### 1. Local Development (Host)
-Starts Azurite (via Docker), the Ingress API, and the Browser Orchestrator worker natively on your host machine with auto-setup.
-
-```bash
-npm run platform:up
-```
-
-### 2. Containerized Testing (Docker)
-Builds the worker Docker image and runs it attached to your host network, identical to production.
+### 1. Start Infrastructure (Azurite)
+Starts Azurite (via Docker), waits for ports, and automatically initializes the required containers, queues, and tables.
 
 ```bash
-npm run platform:docker
+npm run azurite:up
 ```
 
-### 3. Graceful Teardown
-To cleanly stop all containers and surgically kill any lingering background processes:
+### 2. Start Background Services
+Launches the Ingress API and the Browser Orchestrator worker in the background using PM2. Requires Azurite to be running.
 
 ```bash
-npm run platform:down
+npm run start
 ```
 
-### 4. Submit Jobs (CLI)
+### 3. Submit Jobs (CLI)
 While the platform is running, submit jobs using the dev CLI:
 
 ```bash
@@ -142,3 +135,36 @@ npm run ingress --workspace @capture-automation-platform/browser-orchestrator --
 ```
 
 Example: `npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- https://example.com pdf`
+
+### 4. Monitor & Logs
+Since services run in the background, use PM2 to monitor them:
+
+```bash
+# View status of all services
+npx pm2 status
+
+# Tail logs for all services
+npx pm2 logs
+
+# Stop all background services
+npm run teardown
+```
+
+## 🧪 Testing
+
+The platform uses a decoupled testing strategy where tests run directly against source files using `tsx`.
+
+### 1. Workspace Tests
+Run isolated unit and integration tests for a specific workspace:
+
+```bash
+# Run tests for a workspace
+npm test --workspace @capture-automation-platform/azure-adapters
+```
+
+### 2. Platform Integration Tests
+Runs the full end-to-end integration suite across all services:
+
+```bash
+npm run test:platform
+```

@@ -26,10 +26,10 @@ try {
   // Ignore
 }
 
-// 3. Surgically kill lingering Node/Foreman processes
+// 3. Surgically kill lingering Node/PM2 processes
 console.log('🔪 Killing lingering background processes...');
 const processesToKill = [
-  'nf start',
+  'pm2',
   'func start',
   'dist/index.js'
 ];

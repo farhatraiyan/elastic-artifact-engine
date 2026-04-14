@@ -1,2 +1,0 @@
-infra: docker compose -f ../../docker/azurite/docker-compose.yml up
-test:  npx wait-on tcp:10000 && npm run platform:setup --prefix ../.. && node --test dist/tests/*.test.js

@@ -8,7 +8,7 @@
     "build": "tsc -b",
     "clean": "rm -rf dist* **/*.tsbuildinfo **/*.d.ts.map **/*.js.map",
     "lint": "eslint src tests",
-    "test": "npx nf start --procfile Procfile.test"
+    "test": "node --import tsx --test --test-timeout=60000 tests/*.test.ts"
   },
   "dependencies": {
     "@azure/data-tables": "^13.3.2",

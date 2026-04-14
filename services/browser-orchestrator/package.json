@@ -5,13 +5,12 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc -b",
-    "build:core": "tsc -p tsconfig.core.json",
     "clean": "rm -rf dist* **/*.tsbuildinfo **/*.d.ts.map **/*.js.map",
     "dev": "tsx src/index.ts",
     "ingress": "tsx scripts/dev-cli.ts",
     "lint": "eslint .",
-    "start": "node dist/index.js",
-    "test": "npx nf start --procfile Procfile.test"
+    "start": "pm2 start ../../platform.config.cjs --only browser-orchestrator",
+    "test": "node --import tsx --test --test-timeout=60000 tests/*.test.ts"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

@@ -19,22 +19,22 @@ The service leverages Azure Functions HTTP triggers for scale-to-zero capabiliti
 
 ## 🛠️ Local Development
 
-Local development is orchestrated entirely from the project root using `foreman`.
+Local development is orchestrated from the project root using **PM2** and **Azurite**.
 
 ### Commands (Run from Project Root)
 
 | Command | Description |
 | :--- | :--- |
-| `npm run platform:up` | Starts Azurite, compiles the API, and runs `func start` natively alongside the worker. |
-| `npm run platform:down` | Gracefully shuts down the API and all associated background infrastructure. |
+| `npm run azurite:up` | Starts Azurite and initializes the metadata table and capture queues. |
+| `npm run start` | Starts the Ingress API and Worker in the background via PM2. |
+| `npm run start:ingress` | Starts only the Ingress API in the background via PM2. |
+| `npm run teardown` | Shuts down the API, worker, and all associated background infrastructure. |
 
 ### Manual Workspace Testing
-You can run the API's unit tests in isolation from its workspace directory:
+You can run the API's unit tests in isolation using `tsx`:
 
 ```bash
-# Navigate to the workspace
-cd services/ingress-api
-
-# Run local unit tests
-npm test
+# Navigate to the workspace (or use --workspace from root)
+npm test --workspace @capture-automation-platform/ingress-api
 ```
+
