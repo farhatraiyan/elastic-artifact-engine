@@ -69,11 +69,18 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      FUNCTIONS_CORE_TOOLS_TELEMETRY_OPTOUT: 1
+      AzureWebJobsStorage: UseDevelopmentStorage=true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Install Azure Functions Core Tools
+        run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
       - run: npm install --legacy-peer-deps
       
       - name: Get Playwright version
