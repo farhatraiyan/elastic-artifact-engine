@@ -68,7 +68,7 @@ jobs:
     needs: [pre-check, lint]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -96,6 +96,9 @@ jobs:
       - name: Build Project
         run: npm run build
 
+      - name: Start Azurite
+        run: npm run azurite:up
+
       - name: Run Azure Adapter Tests
         if: |
           needs.pre-check.outputs.azure-adapters == 'true' ||
@@ -119,13 +122,17 @@ jobs:
 
       - name: Run System Integration Tests
         run: |
-          npm run platform:up &
+          npm start &
           
-          # Wait for API to initialize
+          # Wait for API to initialize (already waits for Azurite via start script)
           npx wait-on tcp:7071 -t 60000
           
-          # Run the E2E tests
-          npm run test:system
+          # Extra buffer for host lock lease
+          sleep 10
           
-          # Teardown the platform
-          npm run platform:down
+          # Run the E2E tests
+          npm run test:platform
+        
+      - name: Teardown
+        if: always()
+        run: npm run teardown
