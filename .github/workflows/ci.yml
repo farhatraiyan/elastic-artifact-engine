@@ -139,15 +139,22 @@ jobs:
           # Start Browser Orchestrator (direct)
           node services/browser-orchestrator/dist/index.js &
           
-          # Wait for API to initialize
-          npx wait-on http://localhost:7071/api/capture -t 120000 --status 405
+          # Wait for API to initialize (waiting for root 200)
+          npx wait-on http-get://127.0.0.1:7071 -t 120000
           
           # Extra buffer for host lock lease
-          sleep 20
+          sleep 10
           
           # Run the E2E tests
           npm run test:platform
         
+      - name: Diagnostics (on failure)
+        if: failure()
+        run: |
+          curl -v http://127.0.0.1:7071/api/capture || true
+          ls -R services/ingress-api/dist || true
+          npx pm2 list || true
+
       - name: Teardown
         if: always()
         run: |
