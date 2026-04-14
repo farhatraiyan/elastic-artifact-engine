@@ -72,6 +72,7 @@ jobs:
     env:
       FUNCTIONS_CORE_TOOLS_TELEMETRY_OPTOUT: 1
       AzureWebJobsStorage: UseDevelopmentStorage=true
+      AZURE_STORAGE_CONNECTION_STRING: UseDevelopmentStorage=true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -129,17 +130,28 @@ jobs:
 
       - name: Run System Integration Tests
         run: |
-          npm start &
+          # Create local.settings.json for the API
+          echo '{"IsEncrypted":false,"Values":{"AzureWebJobsStorage":"UseDevelopmentStorage=true","FUNCTIONS_WORKER_RUNTIME":"node","AZURE_STORAGE_CONNECTION_STRING":"UseDevelopmentStorage=true","AZURE_STORAGE_BLOB_CONTAINER_NAME":"captures","AZURE_STORAGE_QUEUE_NAME":"jobs","AZURE_STORAGE_TABLE_NAME":"metadata"}}' > services/ingress-api/local.settings.json
           
-          # Wait for API to initialize (already waits for Azurite via start script)
-          npx wait-on tcp:7071 -t 60000
+          # Start Ingress API (direct)
+          cd services/ingress-api && func start &
+          
+          # Start Browser Orchestrator (direct)
+          node services/browser-orchestrator/dist/index.js &
+          
+          # Wait for API to initialize
+          npx wait-on http://localhost:7071/api/capture -t 120000 --status 405
           
           # Extra buffer for host lock lease
-          sleep 10
+          sleep 20
           
           # Run the E2E tests
           npm run test:platform
         
       - name: Teardown
         if: always()
-        run: npm run teardown
+        run: |
+          npm run azurite:down
+          # Kill background processes if any (shell handles this on exit but good practice)
+          pkill -f "func start" || true
+          pkill -f "node services/browser-orchestrator/dist/index.js" || true
