@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'ingress-api',
-      script: 'func',
-      args: 'start',
+      script: 'npx',
+      args: 'func start',
       cwd: 'services/ingress-api',
       env: {
         NODE_ENV: 'development',
