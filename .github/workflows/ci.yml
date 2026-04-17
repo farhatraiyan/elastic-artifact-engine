@@ -141,7 +141,7 @@ jobs:
           node services/browser-orchestrator/dist/index.js &
           
           # Wait for API to initialize
-          npx wait-on http://127.0.0.1:7071/api/health -t 120000
+          npx wait-on http-get://127.0.0.1:7071/api/health -t 120000
           
           # Extra buffer for host lock lease
           sleep 10
@@ -152,7 +152,7 @@ jobs:
       - name: Diagnostics (on failure)
         if: failure()
         run: |
-          curl -v http://127.0.0.1:7071/api/health || true
+          curl -v http-get://127.0.0.1:7071/api/health || true
           ls -R services/ingress-api/dist || true
 
       - name: Teardown
