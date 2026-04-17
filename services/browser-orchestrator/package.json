@@ -5,17 +5,12 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc -b",
-    "build:core": "tsc -p tsconfig.core.json",
     "clean": "rm -rf dist* **/*.tsbuildinfo **/*.d.ts.map **/*.js.map",
-    "dev": "node dist-dev/index.js",
-    "ingress": "node dist-dev/dev-cli.js",
+    "dev": "tsx src/index.ts",
+    "ingress": "tsx scripts/dev-cli.ts",
     "lint": "eslint .",
-    "posttest": "rm -rf dist-core",
-    "services:up": "docker compose -f docker/dev/docker-compose.yml up -d",
-    "services:down": "docker compose -f docker/dev/docker-compose.yml down",
-    "services:setup": "node dist-dev/setup-azurite.js",
-    "start": "node dist/index.js",
-    "test": "npm run services:up && (npm run build:core && node --test dist-core/tests/*.test.js) && npm run services:down"
+    "start": "pm2 start ../../platform.config.cjs --only browser-orchestrator",
+    "test": "node --import tsx --test --test-timeout=60000 tests/*.test.ts"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
@@ -28,7 +23,6 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/turndown": "^5.0.6",
-    "tsx": "^4.0.0",
-    "zod": "^4.3.6"
+    "tsx": "^4.0.0"
   }
 }

@@ -1,15 +1,15 @@
 import { QueueClient } from '@azure/storage-queue';
 import { QueueMessage } from '@capture-automation-platform/shared-types';
-import { QueueService } from '../core/interfaces.js';
 import { setTimeout } from 'timers/promises';
-import { z } from 'zod';
+
+import { QueueService, Schema } from '../core/interfaces.js';
 
 export class AzureQueueAdapter<T> implements QueueService<T> {
   private readonly MAX_DELAY = 30000;
   private readonly MIN_DELAY = 200;
   private maxRetries: number;
   private queueClient: QueueClient;
-  private schema?: z.ZodType<T>;
+  private schema?: Schema<T>;
 
   private async delay(delay: number, signal?: AbortSignal): Promise<void> {
     try {
@@ -17,7 +17,7 @@ export class AzureQueueAdapter<T> implements QueueService<T> {
     } catch { /* ignore */ }
   }
 
-  constructor(connectionString: string, queueName: string, maxRetries: number = 5, schema?: z.ZodType<T>) {
+  constructor(connectionString: string, queueName: string, maxRetries: number = 5, schema?: Schema<T>) {
     this.queueClient = new QueueClient(connectionString, queueName);
     this.maxRetries = maxRetries;
     this.schema = schema;
@@ -93,5 +93,9 @@ export class AzureQueueAdapter<T> implements QueueService<T> {
         popReceipt: msg.popReceipt
       };
     }
+  }
+
+  async push(message: T): Promise<void> {
+    await this.queueClient.sendMessage(JSON.stringify(message));
   }
 }

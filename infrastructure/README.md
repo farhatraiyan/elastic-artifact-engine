@@ -33,6 +33,21 @@ export ACR_NAME=$(az acr list --resource-group rg-capture-automation-platform-de
 az acr login --name $ACR_NAME
 ```
 
+## 4. Build and Push the Docker Image
+
+The Docker configuration has been centralized at the project root. Build and push the image using the provided scripts:
+
+```bash
+# Build the Docker image locally
+npm run build:docker
+
+# Tag the image for your ACR
+docker tag browser-orchestrator $ACR_NAME.azurecr.io/browser-orchestrator:latest
+
+# Push the image
+docker push $ACR_NAME.azurecr.io/browser-orchestrator:latest
+```
+
 ## Optimization Notes
 
 - **Multi-stage Build**: Uses a builder stage to compile TypeScript and install dependencies, ensuring the final image only contains production-ready artifacts and required system libraries.

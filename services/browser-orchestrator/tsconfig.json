@@ -1,14 +1,19 @@
 {
-  "files": [],
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "src",
+    "composite": true
+  },
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "./src/tsconfig.json"
+      "path": "../../packages/shared-types"
     },
     {
-      "path": "./scripts/tsconfig.json"
-    },
-    {
-      "path": "./tests/tsconfig.json"
+      "path": "../../packages/azure-adapters"
     }
   ]
 }

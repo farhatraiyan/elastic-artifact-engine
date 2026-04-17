@@ -51,8 +51,8 @@ graph TD
 │   ├── azure-adapters/        # Shared Azure infrastructure logic
 │   └── shared-types/          # Shared job and status interfaces
 ├── services/                  # Backend Microservices
-│   └── api-gateway/           # HTTP Ingress (AFA)
 │   └── browser-orchestrator/  # Playwright-based capture service (ACA)
+│   └── ingress-api/           # HTTP Ingress (AFA)
 └── web/                       # UI for manual job submission
 ```
 
@@ -89,9 +89,7 @@ The platform is designed to be easily testable locally using Azurite for Azure S
 ### Prerequisites
 
 - **Node.js**: v20+
-- **Azurite**: Required for local storage/queue emulation.
-  - Recommended: `npm run services:up --workspace @capture-automation-platform/browser-orchestrator`
-  - Manual: `docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 mcr.microsoft.com/azure-storage/azurite --skipApiVersionCheck`
+- **Docker**: Required for Azurite storage emulation and containerized worker testing.
 - **Playwright Browsers**: `npx playwright install chromium`
 
 ### Installation
@@ -111,21 +109,62 @@ Always build the shared types first, as all other services depend on them:
 npm run build
 ```
 
-## 🏃 Running the System
+## 🏃 Running the Platform
 
-The project uses a unified **Azurite-backed** workflow:
+The platform is designed to be easily testable locally using Azurite for Azure Storage emulation and **PM2** for background process management.
 
-1. **Start Azurite**:
-   ```bash
-   npm run services:up --workspace @capture-automation-platform/browser-orchestrator
-   ```
-2. **Start Worker**:
-   ```bash
-   npm run dev --workspace @capture-automation-platform/browser-orchestrator
-   ```
-3. **Submit Jobs (CLI)**:
-   ```bash
-   npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- <url> [type]
-   ```
+### 1. Start Infrastructure (Azurite)
+Starts Azurite (via Docker), waits for ports, and automatically initializes the required containers, queues, and tables.
 
-   Example: `npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- https://example.com pdf`
+```bash
+npm run azurite:up
+```
+
+### 2. Start Background Services
+Launches the Ingress API and the Browser Orchestrator worker in the background using PM2. Requires Azurite to be running.
+
+```bash
+npm run start
+```
+
+### 3. Submit Jobs (CLI)
+While the platform is running, submit jobs using the dev CLI:
+
+```bash
+npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- <url> [type]
+```
+
+Example: `npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- https://example.com pdf`
+
+### 4. Monitor & Logs
+Since services run in the background, use PM2 to monitor them:
+
+```bash
+# View status of all services
+npx pm2 status
+
+# Tail logs for all services
+npx pm2 logs
+
+# Stop all background services
+npm run teardown
+```
+
+## 🧪 Testing
+
+The platform uses a decoupled testing strategy where tests run directly against source files using `tsx`.
+
+### 1. Workspace Tests
+Run isolated unit and integration tests for a specific workspace:
+
+```bash
+# Run tests for a workspace
+npm test --workspace @capture-automation-platform/azure-adapters
+```
+
+### 2. Platform Integration Tests
+Runs the full end-to-end integration suite across all services:
+
+```bash
+npm run test:platform
+```

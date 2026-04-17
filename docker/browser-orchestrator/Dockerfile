@@ -14,6 +14,7 @@ COPY packages/azure-adapters/package.json ./packages/azure-adapters/
 RUN npm install --legacy-peer-deps
 
 # Copy source code
+COPY scripts ./scripts
 COPY packages/shared-types ./packages/shared-types
 COPY packages/azure-adapters ./packages/azure-adapters
 COPY services/browser-orchestrator ./services/browser-orchestrator
@@ -66,7 +67,7 @@ COPY --from=builder /app/packages/azure-adapters/package.json ./packages/azure-a
 COPY --from=builder /app/packages/azure-adapters/dist ./packages/azure-adapters/dist
 
 # Copy entrypoint script
-COPY services/browser-orchestrator/docker/docker-entrypoint.sh ./docker-entrypoint.sh
+COPY docker/browser-orchestrator/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
 # Selective Pruning of high-bloat devDependencies

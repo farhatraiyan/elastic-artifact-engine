@@ -24,6 +24,7 @@ jobs:
     outputs:
       shared-types: ${{ steps.filter.outputs.shared-types }}
       azure-adapters: ${{ steps.filter.outputs.azure-adapters }}
+      ingress: ${{ steps.filter.outputs.ingress }}
       core: ${{ steps.filter.outputs.core }}
       lintable: ${{ steps.filter.outputs.lintable }}
     steps:
@@ -36,6 +37,8 @@ jobs:
               - 'packages/shared-types/**'
             azure-adapters:
               - 'packages/azure-adapters/**'
+            ingress:
+              - 'services/ingress-api/**'
             core:
               - 'services/browser-orchestrator/**'
             lintable:
@@ -46,28 +49,38 @@ jobs:
   lint:
     needs: pre-check
     if: |
-      github.event_name == 'workflow_dispatch' && inputs.force_run_all ||
+      github.event_name == 'workflow_dispatch' && inputs.force_run_all == true ||
       needs.pre-check.outputs.lintable == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install --legacy-peer-deps
+      - name: Install minimal dependencies for linting
+        run: npm install --legacy-peer-deps --ignore-scripts
       - run: npm run lint
 
   test:
     needs: [pre-check, lint]
-    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    env:
+      FUNCTIONS_CORE_TOOLS_TELEMETRY_OPTOUT: 1
+      AzureWebJobsStorage: UseDevelopmentStorage=true
+      AZURE_STORAGE_CONNECTION_STRING: UseDevelopmentStorage=true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Install Azure Functions Core Tools
+        run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
       - run: npm install --legacy-peer-deps
       
       - name: Get Playwright version
@@ -90,8 +103,61 @@ jobs:
       - name: Build Project
         run: npm run build
 
+      - name: Start Azurite
+        run: |
+          npm run azurite:up
+          npx wait-on tcp:10000 tcp:10001 tcp:10002 -t 30000
+
       - name: Run Azure Adapter Tests
+        if: |
+          needs.pre-check.outputs.azure-adapters == 'true' ||
+          needs.pre-check.outputs.shared-types == 'true' ||
+          github.event_name == 'workflow_dispatch' && inputs.force_run_all == true
         run: npm test --workspace @capture-automation-platform/azure-adapters
 
+      - name: Run Ingress API Tests
+        if: |
+          needs.pre-check.outputs.ingress == 'true' ||
+          needs.pre-check.outputs.shared-types == 'true' ||
+          github.event_name == 'workflow_dispatch' && inputs.force_run_all == true
+        run: npm test --workspace @capture-automation-platform/ingress-api
+
       - name: Run Worker Tests
+        if: |
+          needs.pre-check.outputs.core == 'true' ||
+          needs.pre-check.outputs.shared-types == 'true' ||
+          github.event_name == 'workflow_dispatch' && inputs.force_run_all == true
         run: npm test --workspace @capture-automation-platform/browser-orchestrator
+
+      - name: Run System Integration Tests
+        run: |
+          # Create local.settings.json for the API
+          echo '{"IsEncrypted":false,"Values":{"AzureWebJobsStorage":"UseDevelopmentStorage=true","FUNCTIONS_WORKER_RUNTIME":"node","AZURE_STORAGE_CONNECTION_STRING":"UseDevelopmentStorage=true","AZURE_STORAGE_BLOB_CONTAINER_NAME":"captures","AZURE_STORAGE_QUEUE_NAME":"jobs","AZURE_STORAGE_TABLE_NAME":"metadata"}}' > services/ingress-api/local.settings.json
+          
+          # Start Ingress API (direct)
+          cd services/ingress-api && func start &
+          
+          # Start Browser Orchestrator (direct)
+          node services/browser-orchestrator/dist/index.js &
+          
+          # Wait for API to initialize
+          npx wait-on http-get://127.0.0.1:7071/api/health -t 120000
+          
+          # Extra buffer for host lock lease
+          sleep 10
+          
+          # Run the E2E tests
+          npm run test:platform
+
+      - name: Diagnostics (on failure)
+        if: failure()
+        run: |
+          curl -v http-get://127.0.0.1:7071/api/health || true
+          ls -R services/ingress-api/dist || true
+
+      - name: Teardown
+        if: always()
+        run: |
+          npm run azurite:down
+          pkill -f "func start" || true
+          pkill -f "node services/browser-orchestrator/dist/index.js" || true

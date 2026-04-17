@@ -45,9 +45,10 @@ npm run build --workspace @capture-automation-platform/azure-adapters
 ```
 
 ### Testing
-This package includes unit tests that run against **Azurite**. Ensure Azurite is running before executing tests:
+This package includes integration tests that run against **Azurite**. Ensure Azurite is running (via `npm run azurite:up` at the root) before executing tests:
 
 ```bash
-# Run tests
-node --test packages/azure-adapters/dist/tests/*.test.js
+# Run tests directly against source via tsx
+npm test
 ```
+
