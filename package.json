@@ -23,7 +23,7 @@
     "start": "wait-on tcp:10000 tcp:10001 tcp:10002 && pm2 start platform.config.cjs && wait-on tcp:7071",
     "start:ingress": "wait-on tcp:10000 tcp:10001 tcp:10002 && pm2 start platform.config.cjs --only ingress-api && wait-on tcp:7071",
     "start:orchestrator": "wait-on tcp:10000 tcp:10001 tcp:10002 && pm2 start platform.config.cjs --only browser-orchestrator",
-    "teardown": "pm2 delete all || true && npm run azurite:down && tsx scripts/platform-teardown.ts",
+    "teardown": "npm run azurite:down && npx pm2 kill || true && pkill -f \"func start\" || true && pkill -f \"node services/browser-orchestrator\" || true",
     "test": "npm run build && npm test --workspaces --if-present",
     "test:platform": "node --import tsx --test --test-timeout=60000 tests/Platform.test.ts"
   },
