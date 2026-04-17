@@ -16,28 +16,15 @@ The Capture Automation Platform is built to handle the "thundering herd" problem
 
 ---
 
-## 🏗️ Architecture
+### 🏗️ System Architecture
 
-The platform follows a microservices-inspired architecture managed within a TypeScript monorepo.
+[Click here to view full resolution](https://github.com/farhatraiyan/capture-automation-platform/blob/main/docs/architecture.png)
 
-```mermaid
-graph TD
-    Client[Automation Client] -->|HTTP POST| Ingress[HTTP Ingress - Azure Functions]
-    Ingress -->|Enqueue Job| Queue[Azure Queue Storage]
-    Ingress -->|Initialize Metadata| Table[Azure Table Storage]
-  
-    subgraph "Compute Layer (ACA)"
-        Worker[Browser Orchestrator Worker]
-    end
-  
-    Queue -->|Dequeue| Worker
-    Worker -->|Execute| Playwright[Playwright / Chromium]
-    Worker -->|Store Result| Blob[Azure Blob Storage]
-    Worker -->|Update Status| Table
-  
-    Client -->|Poll Status| Ingress
-    Ingress -->|Query Metadata| Table
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/architecture-light.png">
+  <img alt="System Architecture Diagram" src="docs/architecture-light.png">
+</picture>
 
 ## 📂 Project Structure
 
@@ -63,7 +50,7 @@ graph TD
 * **Language:** TypeScript (Node.js 20+)
 * **Browser Automation:** Playwright (Chromium)
 * **Cloud Provider:** Microsoft Azure
-  * **Compute:** Azure Container Apps (Worker), Azure Functions (Ingress - *WIP*)
+  * **Compute:** Azure Container Apps (Worker), Azure Functions (Ingress)
   * **Storage:** Azure Blob Storage (Output), Azure Queue Storage (Jobs), Azure Table Storage (Metadata)
 * **DevOps:** Docker, Azure Bicep, GitHub Actions
 
@@ -76,7 +63,7 @@ The project is currently in active development. The core processing engine is fu
 - [X] **Shared Type System**: Unified contracts for job orchestration.
 - [X] **Core Worker Engine**: Playwright orchestration and Azure Storage adapters.
 - [X] **Containerization**: Optimized Docker image with Playwright dependencies.
-- [ ] **HTTP Ingress (AFA)**: Azure Functions-based entry point for job submission and status polling.
+- [X] **HTTP Ingress (AFA)**: Azure Functions-based entry point for job submission and status polling.
 - [ ] **Infrastructure-as-Code**: Complete Bicep templates for ACA/AFA/Storage deployment.
 - [ ] **Web UI**: A modern dashboard for manual job submission and visual result inspection.
 
