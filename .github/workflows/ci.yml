@@ -148,7 +148,7 @@ jobs:
           
           # Run the E2E tests
           npm run test:platform
-        
+
       - name: Diagnostics (on failure)
         if: failure()
         run: |
@@ -157,4 +157,7 @@ jobs:
 
       - name: Teardown
         if: always()
-        run: npm run teardown
+        run: |
+          npm run azurite:down
+          pkill -f "func start" || true
+          pkill -f "node services/browser-orchestrator/dist/index.js" || true
