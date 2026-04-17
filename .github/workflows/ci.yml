@@ -157,8 +157,4 @@ jobs:
 
       - name: Teardown
         if: always()
-        run: |
-          npm run teardown
-          # Kill background processes if any (shell handles this on exit but good practice)
-          pkill -f "func start" || true
-          pkill -f "node services/browser-orchestrator/dist/index.js" || true
+        run: npm run teardown
