@@ -66,7 +66,6 @@ jobs:
 
   test:
     needs: [pre-check, lint]
-    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -105,7 +104,9 @@ jobs:
         run: npm run build
 
       - name: Start Azurite
-        run: npm run azurite:up
+        run: |
+          npm run azurite:up
+          npx wait-on tcp:10000 tcp:10001 tcp:10002 -t 30000
 
       - name: Run Azure Adapter Tests
         if: |
@@ -139,8 +140,8 @@ jobs:
           # Start Browser Orchestrator (direct)
           node services/browser-orchestrator/dist/index.js &
           
-          # Wait for API to initialize (waiting for root 200)
-          npx wait-on http-get://127.0.0.1:7071 -t 120000
+          # Wait for API to initialize
+          npx wait-on http://127.0.0.1:7071/api/health -t 120000
           
           # Extra buffer for host lock lease
           sleep 10
@@ -151,14 +152,13 @@ jobs:
       - name: Diagnostics (on failure)
         if: failure()
         run: |
-          curl -v http://127.0.0.1:7071/api/capture || true
+          curl -v http://127.0.0.1:7071/api/health || true
           ls -R services/ingress-api/dist || true
-          npx pm2 list || true
 
       - name: Teardown
         if: always()
         run: |
-          npm run azurite:down
+          npm run teardown
           # Kill background processes if any (shell handles this on exit but good practice)
           pkill -f "func start" || true
           pkill -f "node services/browser-orchestrator/dist/index.js" || true

@@ -37,6 +37,12 @@ app.http('download', {
   route: 'download/{jobId}'
 });
 
+app.http('health', {
+  authLevel: 'anonymous',
+  handler: async () => ({ status: 200, body: 'OK' }),
+  methods: ['GET']
+});
+
 app.http('status', {
   authLevel: 'function',
   handler: statusHandler.handle.bind(statusHandler),
