@@ -6,6 +6,7 @@ import { HttpRequest, InvocationContext } from '@azure/functions';
 import { MetadataService, QueueService, StorageService } from '@capture-automation-platform/azure-adapters';
 
 import { CaptureHandler } from '../src/functions/CaptureHandler.js';
+import { DownloadHandler } from '../src/functions/DownloadHandler.js';
 import { StatusHandler } from '../src/functions/StatusHandler.js';
 
 // Simple mock for HttpRequest
@@ -91,5 +92,62 @@ describe('Ingress API Functions (Unit Tests)', () => {
     const body = res.jsonBody as Record<string, unknown>;
     assert.strictEqual(body.status, 'Completed');
     assert.strictEqual(body.downloadUrl, 'http://sas-url');
+  });
+
+  test('download should return 400 for missing jobId', async () => {
+    const downloadHandler = new DownloadHandler(mockMetadata, mockStorage);
+    const req = mockRequest({ params: {} }); // No jobId provided
+
+    const res = await downloadHandler.handle(req, mockContext);
+    assert.strictEqual(res.status, 400);
+  });
+
+  test('download should return 404 for non-existent job', async () => {
+    const downloadHandler = new DownloadHandler(mockMetadata, mockStorage);
+    const req = mockRequest({
+      params: { jobId: 'non-existent' }
+    });
+
+    const res = await downloadHandler.handle(req, mockContext);
+    assert.strictEqual(res.status, 404);
+  });
+
+  test('download should return 400 if job is not completed', async () => {
+    const processingMetadata = {
+      ...mockMetadata,
+      getJobState: async () => ({
+        status: 'Processing',
+        updatedAt: new Date()
+      })
+    } as unknown as MetadataService;
+
+    const downloadHandler = new DownloadHandler(processingMetadata, mockStorage);
+    const req = mockRequest({
+      params: { jobId: 'job1' }
+    });
+
+    const res = await downloadHandler.handle(req, mockContext);
+    assert.strictEqual(res.status, 400);
+  });
+
+  test('download should return 302 redirect for completed job', async () => {
+    const completedMetadata = {
+      ...mockMetadata,
+      getJobState: async () => ({
+        status: 'Completed',
+        updatedAt: new Date(),
+        outputUrl: 'https://storage.com/captures/job1.pdf'
+      })
+    } as unknown as MetadataService;
+
+    const downloadHandler = new DownloadHandler(completedMetadata, mockStorage);
+    const req = mockRequest({
+      params: { jobId: 'job1' }
+    });
+
+    const res = await downloadHandler.handle(req, mockContext);
+    assert.strictEqual(res.status, 302);
+    // @ts-expect-error - headers is loosely typed in the mocked response
+    assert.strictEqual(res.headers?.Location, 'http://sas-url');
   });
 });

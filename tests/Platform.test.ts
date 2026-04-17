@@ -50,11 +50,22 @@ describe('System Integration (E2E)', { timeout: 60000 }, () => {
     assert.strictEqual(status, 'Completed', 'Job should eventually complete');
     assert.ok(downloadUrl, 'Should provide a download URL');
 
-    // 3. Verify Download
-    console.log('Verifying download link...');
-    const downloadRes = await fetch(downloadUrl);
-    assert.strictEqual(downloadRes.status, 200, 'SAS URL should be accessible');
-    const blob = await downloadRes.blob();
+    // 3. Verify Download via API Endpoint
+    console.log('Verifying download redirect and file retrieval...');
+    const downloadRedirectRes = await fetch(`${API_URL}/download/${jobId}`, {
+      redirect: 'manual' // Prevent fetch from auto-following so we can assert the 302
+    });
+
+    assert.strictEqual(downloadRedirectRes.status, 302, 'API should return a 302 Redirect');
+    
+    const location = downloadRedirectRes.headers.get('location');
+    assert.ok(location, 'Should provide a location header to the SAS URL');
+
+    // Fetch the actual blob from the redirected SAS URL
+    const blobRes = await fetch(location);
+    assert.strictEqual(blobRes.status, 200, 'SAS URL should be accessible');
+    
+    const blob = await blobRes.blob();
     assert.ok(blob.size > 0, 'Downloaded file should not be empty');
     assert.strictEqual(blob.type, 'application/pdf', 'Should be a PDF');
   });
