@@ -66,10 +66,6 @@ COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
 COPY --from=builder /app/packages/azure-adapters/package.json ./packages/azure-adapters/
 COPY --from=builder /app/packages/azure-adapters/dist ./packages/azure-adapters/dist
 
-# Copy entrypoint script
-COPY docker/browser-orchestrator/docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x ./docker-entrypoint.sh
-
 # Selective Pruning of high-bloat devDependencies
 RUN rm -rf \
     node_modules/typescript \
@@ -86,5 +82,6 @@ ENV AZURE_STORAGE_TABLE_NAME="metadata"
 ENV CONCURRENCY=2
 ENV ENABLE_CLI=false
 
-# Start the worker
-ENTRYPOINT ["./docker-entrypoint.sh"]
+# Start the worker. Direct exec form makes node PID 1 so it receives SIGTERM/SIGINT
+# directly — Node 14+ handles these correctly without a shell wrapper or tini.
+ENTRYPOINT ["node", "services/browser-orchestrator/dist/index.js"]
