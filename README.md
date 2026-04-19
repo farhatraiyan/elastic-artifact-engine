@@ -30,17 +30,24 @@ The Capture Automation Platform is built to handle the "thundering herd" problem
 
 ```text
 /capture-automation-platform
-├── .github/workflows/         # CI/CD: QA and deployment pipelines (planned)
-├── infrastructure/            # IaC (Azure Resources)
-│   ├── acr.bicep              # Azure Container Registry deployment
-│   └── README.md              # Infrastructure documentation
+├── .github/workflows/         # CI/CD: QA pipelines
+├── infrastructure/            # IaC (Azure Bicep modules + deploy docs)
+│   ├── identity.bicep         # User-Assigned Managed Identity
+│   ├── storage.bicep          # Storage Account + container/queue/table + data-plane roles
+│   ├── registry.bicep         # Azure Container Registry + AcrPull role
+│   ├── functions.bicep        # Flex Consumption Function App (ingress-api shell)
+│   ├── containerapp.bicep     # ACA Environment + Container App (browser-orchestrator)
+│   └── README.md              # Deployment commands, verification, teardown
 ├── packages/                  # Shared Logic/Types
 │   ├── azure-adapters/        # Shared Azure infrastructure logic
 │   └── shared-types/          # Shared job and status interfaces
+├── scripts/                   # Dev + deployment tooling
+│   ├── setup-azurite.ts       # Bootstrap local Azurite container/queue/table
+│   └── publish-ingress-api.sh # Stage + publish ingress-api to the Function App
 ├── services/                  # Backend Microservices
-│   └── browser-orchestrator/  # Playwright-based capture service (ACA)
+│   ├── browser-orchestrator/  # Playwright-based capture service (ACA)
 │   └── ingress-api/           # HTTP Ingress (AFA)
-└── web/                       # UI for manual job submission
+└── web/                       # UI for manual job submission (planned)
 ```
 
 ---
@@ -58,13 +65,15 @@ The Capture Automation Platform is built to handle the "thundering herd" problem
 
 ## 🚦 Current Status & Roadmap
 
-The project is currently in active development. The core processing engine is functional, and the platform is being prepared for its first full cloud deployment.
+The core processing engine is functional and the platform has been deployed end-to-end to Azure with a working capture pipeline.
 
 - [X] **Shared Type System**: Unified contracts for job orchestration.
 - [X] **Core Worker Engine**: Playwright orchestration and Azure Storage adapters.
 - [X] **Containerization**: Optimized Docker image with Playwright dependencies.
 - [X] **HTTP Ingress (AFA)**: Azure Functions-based entry point for job submission and status polling.
-- [ ] **Infrastructure-as-Code**: Complete Bicep templates for ACA/AFA/Storage deployment.
+- [X] **Infrastructure-as-Code**: Bicep modules for identity, storage, ACR, Functions (Flex Consumption), and Container Apps.
+- [ ] **Adapter migration to `DefaultAzureCredential`**: remove connection-string auth in `packages/azure-adapters` so the deployed posture can re-tighten to identity-only.
+- [ ] **ingress-api bundling**: replace the current staging workaround in `scripts/publish-ingress-api.sh` with `esbuild`/`ncc` bundling so `func publish` works with no workspace-dep gymnastics.
 - [ ] **Web UI**: A modern dashboard for manual job submission and visual result inspection.
 
 ---
@@ -136,6 +145,15 @@ npx pm2 logs
 # Stop all background services
 npm run teardown
 ```
+
+## ☁️ Cloud Deployment
+
+To deploy the platform to your own Azure subscription, see [`infrastructure/README.md`](infrastructure/README.md). It covers:
+
+- Prerequisites (Azure CLI, Docker, `func` CLI, Azure resource provider registration, Flex Consumption region availability)
+- Each Bicep module: what it provisions, how to deploy it, how to verify
+- Application deployment: building and pushing the worker image, publishing the ingress-api code via `npm run publish:ingress-api`
+- Teardown: `az group delete` returns to a clean slate (everything is RG-scoped)
 
 ## 🧪 Testing
 

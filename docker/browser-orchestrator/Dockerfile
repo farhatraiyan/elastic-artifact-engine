@@ -1,3 +1,22 @@
+# browser-orchestrator — Playwright/Chromium worker image for Azure Container Apps.
+#
+# Design notes (why this Dockerfile looks the way it does):
+#
+# - Multi-stage build: the builder stage compiles TypeScript and installs the
+#   full dependency set; the final stage only carries compiled artifacts and
+#   the runtime deps needed to execute them.
+# - Dependency pruning: typescript, tsx, eslint, @typescript-eslint, and @types
+#   are removed from the final image layer — they're build-time only.
+# - Playwright deps: minimal Linux libs for Chromium are pre-installed via
+#   apt-get plus `npx playwright install --with-deps chromium`, so no runtime
+#   download when the container starts.
+# - Direct exec-form ENTRYPOINT: `["node", "services/browser-orchestrator/dist/index.js"]`
+#   makes node PID 1, which handles SIGTERM/SIGINT correctly (Node 14+) without
+#   a shell wrapper or tini. An earlier `docker-entrypoint.sh` was dropped once
+#   its only remaining work was an `echo` + `exec node` — at that point it was
+#   pure ceremony and introduced a shell-interpreter dependency on the slim
+#   image (node:20-slim doesn't ship with bash).
+
 # Stage 1: Builder
 FROM node:20-slim AS builder
 
