@@ -67,6 +67,9 @@ Push the image before deploying Container Apps so the initial revision can start
 ACR_NAME=$(az acr list --resource-group $RG --query "[0].name" -o tsv)
 az acr login --name $ACR_NAME
 
+# --platform linux/amd64 required: buildx on Apple Silicon defaults to arm64,
+# which pulls cleanly but fails to exec on ACA (x86-64) with a generic
+# "container failed to start" in the logs.
 docker buildx build \
   --platform linux/amd64 \
   -t $ACR_NAME.azurecr.io/browser-orchestrator:latest \
@@ -112,6 +115,8 @@ az deployment group create \
     acrLoginServer=$ACR_LOGIN_SERVER
 ```
 
+> **API version pin:** `Microsoft.App/containerApps@2026-01-01` is required for `identity` on the KEDA `CustomScaleRule`. Older versions fail with `BCP037: property 'identity' is not allowed`.
+
 ## Application Deployment
 
 ### Ingress API
@@ -133,9 +138,11 @@ curl -fsSL -X POST \
   "https://$FUNC_NAME.scm.azurewebsites.net/api/publish?type=zip&RemoteBuild=false"
 ```
 
+> **Note:** `az functionapp deployment source config-zip` returns 202 but hits the legacy Kudu `/api/zipdeploy` endpoint, where the zip never surfaces as `released-package.zip` and functions fail to register. `az functionapp deploy --type zip` returns 415 on `az` CLI ≤ 2.85 (known Content-Type bug). Flex Consumption's actual deploy API is Kudu OneDeploy (`/api/publish`); the `curl` above hits it directly.
+
 ### Worker Updates
 
-Re-tagging `:latest` in ACR does not trigger a Container App update. Force a new revision:
+Re-tagging `:latest` in ACR does not trigger a Container App update — ACA resolves the image at revision-creation time, not on digest change, so an update without a new revision is a no-op. Force a new revision via `--revision-suffix`:
 
 ```bash
 CA_NAME=$(az containerapp list --resource-group $RG --query "[0].name" -o tsv)
@@ -150,12 +157,59 @@ az containerapp update \
 
 ### Post-deploy Verification
 
-Ensure the API is responsive (expect HTTP 200):
+End-to-end smoketest (health → capture → poll → download):
 
 ```bash
 FUNC_NAME=$(az functionapp list --resource-group $RG --query "[0].name" -o tsv)
-curl -s -o /dev/null -w "HTTP %{http_code}\n" "https://${FUNC_NAME}.azurewebsites.net/api/health"
+FUNC_KEY=$(az functionapp keys list --name $FUNC_NAME --resource-group $RG --query "functionKeys.default" -o tsv)
+
+curl -s -o /dev/null -w "health HTTP %{http_code}\n" "https://${FUNC_NAME}.azurewebsites.net/api/health"
+
+JOB_ID=$(curl -s -X POST "https://${FUNC_NAME}.azurewebsites.net/api/capture?code=${FUNC_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com","type":"pdf"}' | jq -r .jobId)
+
+# First run pays KEDA poll (30s) + replica cold-start; expect ~30-60s.
+STATUS_URL="https://${FUNC_NAME}.azurewebsites.net/api/status/${JOB_ID}?code=${FUNC_KEY}"
+while :; do
+  STATE=$(curl -s "$STATUS_URL")
+  case "$STATE" in
+    *'"status":"Completed"'*) echo "job Completed"; break ;;
+    *'"status":"Failed"'*)    echo "job Failed: $STATE"; exit 1 ;;
+    *) sleep 5 ;;
+  esac
+done
+
+curl -s -L "https://${FUNC_NAME}.azurewebsites.net/api/download/${JOB_ID}?code=${FUNC_KEY}" \
+  -o /tmp/${JOB_ID}.pdf -w "download HTTP %{http_code}, size=%{size_download}\n"
+file /tmp/${JOB_ID}.pdf
 ```
+
+Expected: `health HTTP 200`, `download HTTP 200, size=14733`, `PDF document, version 1.4, 1 pages`. The capture of `https://example.com` is deterministic; a meaningfully different byte count means the capture path changed.
+
+### Troubleshooting `/api/health` 404
+
+A 404 means the Function host is running but no triggers were registered (zip didn't land or the host couldn't load it). Check in order:
+
+```bash
+STORAGE_NAME=$(az storage account list --resource-group $RG --query "[0].name" -o tsv)
+SUB_ID=$(az account show --query id -o tsv)
+TOKEN=$(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv)
+
+# 1. Did the zip land in the deployment container?
+# Requires Storage Blob Data Reader on your user
+az storage blob list --account-name $STORAGE_NAME --container-name deployment \
+  --auth-mode login --query "[].name" -o tsv
+
+# 2. What functions did the host actually register?
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${RG}/providers/Microsoft.Web/sites/${FUNC_NAME}/functions?api-version=2023-12-01" \
+  | jq '.value[].name'
+```
+
+- No `released-package.zip` in (1) → publish never uploaded. Re-run stage + Kudu POST.
+- Zip present but (2) returns empty → host couldn't load the bundle. Inspect `kudu-state.json` in the same container; a common cause is `npm ERR! 404` when a workspace dep escapes the bundler.
+- Functions listed in (2) but `/api/health` still 404s → routing issue; `GET /admin/host/status` (master key required) surfaces runtime state.
 
 ## Teardown
 
