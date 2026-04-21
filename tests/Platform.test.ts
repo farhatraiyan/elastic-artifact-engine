@@ -6,7 +6,6 @@ describe('System Integration (E2E)', { timeout: 60000 }, () => {
   const API_URL = 'http://localhost:7071/api';
 
   test('End-to-End: Capture -> Process -> Status -> Download', async () => {
-    // 1. Submit Capture Request
     console.log('Submitting capture request...');
     const captureRes = await fetch(`${API_URL}/capture`, {
       method: 'POST',
@@ -22,7 +21,6 @@ describe('System Integration (E2E)', { timeout: 60000 }, () => {
     const jobId = body.jobId;
     assert.ok(jobId, 'Should return a jobId');
 
-    // 2. Poll for Completion
     console.log(`Polling status for job ${jobId}...`);
     let status = 'Queued';
     let downloadUrl = '';
@@ -50,10 +48,9 @@ describe('System Integration (E2E)', { timeout: 60000 }, () => {
     assert.strictEqual(status, 'Completed', 'Job should eventually complete');
     assert.ok(downloadUrl, 'Should provide a download URL');
 
-    // 3. Verify Download via API Endpoint
     console.log('Verifying download redirect and file retrieval...');
     const downloadRedirectRes = await fetch(`${API_URL}/download/${jobId}`, {
-      redirect: 'manual' // Prevent fetch from auto-following so we can assert the 302
+      redirect: 'manual'
     });
 
     assert.strictEqual(downloadRedirectRes.status, 302, 'API should return a 302 Redirect');
@@ -61,7 +58,6 @@ describe('System Integration (E2E)', { timeout: 60000 }, () => {
     const location = downloadRedirectRes.headers.get('location');
     assert.ok(location, 'Should provide a location header to the SAS URL');
 
-    // Fetch the actual blob from the redirected SAS URL
     const blobRes = await fetch(location);
     assert.strictEqual(blobRes.status, 200, 'SAS URL should be accessible');
     
