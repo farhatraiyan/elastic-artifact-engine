@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Produces a self-contained zip for Flex Consumption `func`-less deploy.
+# Bundling used as Oryx build fails with local workspace packages. `@azure/*`
+# packages kept external as bundling them into ESM breaks at runtime.
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
