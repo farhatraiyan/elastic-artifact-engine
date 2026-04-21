@@ -1,31 +1,20 @@
-# Azure Adapters Package
+# Azure Adapters
 
-This package provides a standardized, adapter-based interface for interacting with Azure Storage services (Blobs, Queues, and Tables). It is designed to be shared across multiple services in the Capture Automation Platform to ensure consistent infrastructure logic and simplified configuration.
+Standardized adapter interfaces for Azure Storage services (Blobs, Queues, Tables) shared across the Capture Automation Platform.
 
-## 🏗️ Design Philosophy
+## 🏗️ Design
 
-- **Interface-Driven**: All adapters implement shared interfaces, allowing for easy mocking in tests or swapping with alternative implementations.
-- **Resilient**: Includes built-in support for adaptive backoff and retry policies (via Azure SDK defaults and custom wrappers).
-- **Environment-Aware**: Automatically handles "Trusted Development" contexts (e.g., Azurite) when using the `UseDevelopmentStorage=true` shortcut.
+- **Interface-Driven**: Easily mockable or swappable implementations (`StorageService`, `QueueService`, `MetadataService`).
+- **Resilient**: Built-in adaptive backoff and polling.
+- **Identity Support**: Seamless `DefaultAzureCredential` integration via `fromCredential` factory methods.
 
-## 📂 Core Adapters
+## 📂 Adapters
 
-- **`AzureBlobStorageAdapter`**: Handles persistence of captured artifacts (PDF, PNG, Markdown) to Azure Blob Storage.
-- **`AzureQueueAdapter`**: Manages job message lifecycle (receive, complete, abandon) using Azure Queue Storage.
-- **`AzureTableMetadataAdapter`**: Tracks job status and metadata in Azure Table Storage.
+- **`AzureBlobStorageAdapter`**: Artifact persistence (PDF, PNG, MD) and SAS URL generation.
+- **`AzureQueueAdapter`**: Job lifecycle management (receive, complete, abandon) with max retry limits.
+- **`AzureTableMetadataAdapter`**: Real-time job status tracking.
 
 ## 🛠️ Usage
-
-### Installation
-As a workspace dependency, it is automatically linked by NPM:
-```json
-"dependencies": {
-  "@capture-automation-platform/azure-adapters": "*"
-}
-```
-
-### Consumption
-Import the adapters and their corresponding interfaces:
 
 ```typescript
 import { 
@@ -33,22 +22,16 @@ import {
   StorageService 
 } from "@capture-automation-platform/azure-adapters";
 
-const storage: StorageService = new AzureBlobStorageAdapter(connectionString, containerName);
+const storage: StorageService = AzureBlobStorageAdapter.fromConnectionString(connectionString, containerName);
 await storage.save("result.pdf", buffer);
 ```
 
-## 🚀 Building & Testing
+## 🚀 Commands
 
-### Building
-```bash
-npm run build --workspace @capture-automation-platform/azure-adapters
-```
+_Execute from workspace root: `npm run <script> --workspace @capture-automation-platform/azure-adapters`_
 
-### Testing
-This package includes integration tests that run against **Azurite**. Ensure Azurite is running (via `npm run azurite:up` at the root) before executing tests:
-
-```bash
-# Run tests directly against source via tsx
-npm test
-```
-
+| Command | Description |
+| :--- | :--- |
+| `npm run build` | Compiles source. |
+| `npm run lint` | Lints source and tests. |
+| `npm test` | Runs integration tests directly against source via `tsx`. Requires Azurite. |
