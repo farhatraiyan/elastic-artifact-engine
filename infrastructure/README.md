@@ -338,43 +338,46 @@ az containerapp show \
 
 By this point the Bicep modules have provisioned every resource shell and the `browser-orchestrator` image is already in ACR. The only remaining app-side step on first deploy is publishing the ingress-api code.
 
-### Prerequisites
-
-- **Azure Functions Core Tools v4** required for publishing the ingress-api code.
-  ```bash
-  npm install -g azure-functions-core-tools@4 --unsafe-perm true
-  func --version   # expect 4.x.x
-  ```
-- **`services/ingress-api/local.settings.json`** gitignored (by design; would normally contain local secrets). The `func` CLI reads `FUNCTIONS_WORKER_RUNTIME` from it to detect the project language. The publish script below creates this file automatically if missing, using Azurite-compatible defaults.
-
 ### Step 1 — Ingress API: publish code to the Function App
 
-The Function App shell is live from `functions.bicep` but has no code. Publishing directly with `func azure functionapp publish --build remote` **will fail** because Flex Consumption's Oryx remote build runs `npm install` against the public npm registry, which 404s on the monorepo's workspace packages (`@capture-automation-platform/*`). The repo ships a script that stages a self-contained deployment directory with workspace deps rewritten to local `file:` refs, then publishes with `--no-build`:
+The Function App shell is live from `functions.bicep` but has no code. Remote build via Oryx **will fail** because Flex Consumption's `npm install` runs against the public npm registry, which 404s on the monorepo's workspace packages (`@capture-automation-platform/*`). Deploying requires staging a self-contained zip and pushing it directly to the Flex deploy endpoint.
+
+**Stage:**
 
 ```bash
-# Uses $RG env var (default: rg-capture-automation-platform-dev) + first
-# Function App in that RG. Override either via env var or positional arg.
-npm run publish:ingress-api
-
-# Explicit Function App name
-npm run publish:ingress-api -- my-custom-func-name
+ZIP=$(npm run stage:ingress-api --silent)
 ```
 
-What the script does, in order:
+What `scripts/stage-ingress-api.sh` does, in order:
 
-1. Verifies `func` and `az` are installed (fails fast with install hints otherwise)
-2. Auto-detects the Function App name from `$RG` if none provided
-3. Creates `services/ingress-api/local.settings.json` if missing (needed for `func` CLI language detection, gitignored)
-4. Runs `npm run build` to compile all workspaces
-5. Stages a temp directory in `/tmp/publish-ingress-api-<pid>/` containing:
-   - The ingress-api source and build output
-   - Copies of `packages/shared-types` and `packages/azure-adapters` under `_workspace_packages/`
-   - Rewritten `package.json` files: every `@capture-automation-platform/*` dep becomes a relative `file:` path
-6. Runs `npm install` inside the staging dir — resolves from disk, no registry lookups
-7. Publishes via `func azure functionapp publish <name> --no-build`
-8. Cleans up the staging dir on exit
+1. Runs `npm run build --workspace @capture-automation-platform/ingress-api` so `tsc -b` walks ingress-api's project references (`tsconfig.json#references`) and builds every upstream workspace in order. Adding a new workspace dep means adding one line to that `references` array, not a line here.
+2. Bundles `src/index.ts` into `.stage/dist/index.js` — a single ESM file that inlines workspace deps (`@capture-automation-platform/*`) and their transitives (e.g. `zod`). `@azure/*` packages are marked `--external` and stay as runtime imports: bundling them into ESM breaks at runtime with *"Dynamic require of 'net' is not supported"* because the Azure SDK's internal http client uses dynamic `require()` that esbuild's ESM output can't statically rewrite. Leaving them external sidesteps the issue entirely — Node resolves them from `node_modules` at runtime and their internal CJS `require()` works natively.
+3. Copies `host.json` and `package.json` into `.stage/` and runs `npm pkg delete devDependencies scripts` to strip everything that isn't runtime (workspace deps live in `devDependencies` so this one operation removes them). Source's `type: module` + `main: dist/index.js` carry through unchanged — no module-format flip between source and deployed artifact.
+4. `npm install` inside the stage — installs the `@azure/*` runtime deps declared in `services/ingress-api/package.json` (functions, storage-blob, storage-queue, data-tables). No workspace-scoped names are resolved, so no public-registry 404s.
+5. Zips the stage into `services/ingress-api/.stage.zip`.
 
-**This is a temporary workaround.** The proper fix is to bundle the ingress-api with `esbuild` (or `ncc`) so the published zip has zero workspace deps at runtime and `func publish` works directly with its defaults. Until that lands, this script is the supported deployment path.
+Both `.stage/` and `.stage.zip` are gitignored. Progress goes to stderr; the zip path is the sole line of stdout, so `ZIP=$(...)` captures it cleanly. Each run wipes and recreates both.
+
+**Publish:**
+
+The Flex Consumption deploy endpoint is Kudu OneDeploy (`POST /api/publish`). Call OneDeploy directly with an AAD token:
+
+```bash
+RG=rg-capture-automation-platform-dev
+FUNC_NAME=$(az functionapp list --resource-group "$RG" --query "[0].name" -o tsv)
+
+TOKEN=$(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv)
+
+curl -fsSL -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/zip" \
+  --data-binary "@$ZIP" \
+  "https://$FUNC_NAME.scm.azurewebsites.net/api/publish?type=zip&RemoteBuild=false"
+```
+
+Returns `202 Accepted` with a deployment id. Poll `GET /api/deployments/<id>` on the SCM site (same bearer token) until `"complete": true, "status": 4`. After that, the Flex host needs ~15–20s to pick up the new `released-package.zip` from deployment storage; the first `GET /api/health` will also pay a cold-start tax.
+
+To target a different resource group or app, change `RG` / `FUNC_NAME` before the token/curl calls.
 
 ### Step 2 — Pushing a new image (subsequent deploys only)
 
@@ -469,8 +472,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 Reading the output:
 
-- If (1) shows no `released-package.zip`, the publish never uploaded. Rerun `npm run publish:ingress-api` and check its exit status.
-- If (1) shows `released-package.zip` but (2) returns `"value": []`, the zip uploaded but the host couldn't load it. Inspect `kudu-state.json` in the same container for per-step errors, and look for `Kudu-OryxBuildStep` failures (typically `npm ERR! 404` if workspace deps escaped the bundler) or missing `node_modules/` (publish bypassed the bundling step).
+- If (1) shows no `released-package.zip`, the publish never uploaded. Rerun the stage + publish sequence and check each command's exit status.
+- If (1) shows `released-package.zip` but (2) returns `"value": []`, the zip uploaded but the host couldn't load it. Inspect `kudu-state.json` in the same container for per-step errors, and look for `Kudu-OryxBuildStep` failures (typically `npm ERR! 404` if something escaped the bundler and hit the public registry) or a missing `node_modules/` (publish was run against an unstaged dir or the stage dir's `npm install` step was skipped).
 - If (2) lists the four functions (`capture`, `download`, `health`, `status`) but `/api/health` still 404s, the host is serving but routing is wrong — try `curl https://${FUNC_NAME}.azurewebsites.net/admin/host/status` (needs master key) to confirm the runtime state.
 
 ## Teardown

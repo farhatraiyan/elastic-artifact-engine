@@ -43,7 +43,7 @@ The Capture Automation Platform is built to handle the "thundering herd" problem
 │   └── shared-types/          # Shared job and status interfaces
 ├── scripts/                   # Dev + deployment tooling
 │   ├── setup-azurite.ts       # Bootstrap local Azurite container/queue/table
-│   └── publish-ingress-api.sh # Stage + publish ingress-api to the Function App
+│   └── stage-ingress-api.sh   # Bundle ingress-api
 ├── services/                  # Backend Microservices
 │   ├── browser-orchestrator/  # Playwright-based capture service (ACA)
 │   └── ingress-api/           # HTTP Ingress (AFA)
@@ -73,7 +73,6 @@ The core processing engine is functional and the platform has been deployed end-
 - [X] **HTTP Ingress (AFA)**: Azure Functions-based entry point for job submission and status polling.
 - [X] **Infrastructure-as-Code**: Bicep modules for identity, storage, ACR, Functions (Flex Consumption), and Container Apps.
 - [ ] **Adapter migration to `DefaultAzureCredential`**: remove connection-string auth in `packages/azure-adapters` so the deployed posture can re-tighten to identity-only.
-- [ ] **ingress-api bundling**: replace the current staging workaround in `scripts/publish-ingress-api.sh` with `esbuild`/`ncc` bundling so `func publish` works with no workspace-dep gymnastics.
 - [ ] **Web UI**: A modern dashboard for manual job submission and visual result inspection.
 
 ---
@@ -152,7 +151,7 @@ To deploy the platform to your own Azure subscription, see [`infrastructure/READ
 
 - Prerequisites (Azure CLI, Docker, `func` CLI, Azure resource provider registration, Flex Consumption region availability)
 - Each Bicep module: what it provisions, how to deploy it, how to verify
-- Application deployment: building and pushing the worker image, publishing the ingress-api code via `npm run publish:ingress-api`
+- Application deployment: building and pushing the browser-orchestrator image; staging and publishing the ingress-api
 - Teardown: `az group delete` returns to a clean slate (everything is RG-scoped)
 
 ## 🧪 Testing
