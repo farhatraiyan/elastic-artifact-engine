@@ -18,7 +18,6 @@ export class CaptureHandler {
     try {
       const body = await request.json() as Record<string, unknown>;
 
-      // Validate request
       const validationResult = CaptureJobSchema.safeParse({
         ...body,
         id: randomUUID()
