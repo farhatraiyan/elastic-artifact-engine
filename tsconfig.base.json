@@ -14,9 +14,9 @@
     "composite": true,
     "types": ["node"],
     "paths": {
-      "@capture-automation-platform/shared-types": ["./packages/shared-types/src/index.ts"],
-      "@capture-automation-platform/azure-adapters": ["./packages/azure-adapters/src/index.ts"],
-      "@capture-automation-platform/browser-orchestrator": ["./services/browser-orchestrator/src/index.ts"]
+      "@elastic-artifact-engine/shared-types": ["./packages/shared-types/src/index.ts"],
+      "@elastic-artifact-engine/azure-adapters": ["./packages/azure-adapters/src/index.ts"],
+      "@elastic-artifact-engine/browser-orchestrator": ["./services/browser-orchestrator/src/index.ts"]
     }
   }
 }

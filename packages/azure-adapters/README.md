@@ -1,6 +1,6 @@
 # Azure Adapters
 
-Standardized adapter interfaces for Azure Storage services (Blobs, Queues, Tables) shared across the Capture Automation Platform.
+Standardized adapter interfaces for Azure Storage services (Blobs, Queues, Tables) shared across the Elastic Artifact Engine.
 
 ## 🏗️ Design
 
@@ -20,7 +20,7 @@ Standardized adapter interfaces for Azure Storage services (Blobs, Queues, Table
 import { 
   AzureBlobStorageAdapter, 
   StorageService 
-} from "@capture-automation-platform/azure-adapters";
+} from "@elastic-artifact-engine/azure-adapters";
 
 const storage: StorageService = AzureBlobStorageAdapter.fromConnectionString(connectionString, containerName);
 await storage.save("result.pdf", buffer);
@@ -28,7 +28,7 @@ await storage.save("result.pdf", buffer);
 
 ## 🚀 Commands
 
-_Execute from workspace root: `npm run <script> --workspace @capture-automation-platform/azure-adapters`_
+_Execute from workspace root: `npm run <script> --workspace @elastic-artifact-engine/azure-adapters`_
 
 | Command | Description |
 | :--- | :--- |

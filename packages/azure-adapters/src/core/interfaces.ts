@@ -1,4 +1,4 @@
-import { JobStatus, QueueMessage, JobState } from '@capture-automation-platform/shared-types';
+import { JobStatus, QueueMessage, JobState } from '@elastic-artifact-engine/shared-types';
 
 export interface Schema<T> {
   safeParse(data: unknown): { success: true; data: T } | { success: false; error: unknown };

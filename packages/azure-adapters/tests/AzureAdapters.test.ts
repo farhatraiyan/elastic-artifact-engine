@@ -5,21 +5,21 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import { TableClient } from '@azure/data-tables';
 import { QueueClient } from '@azure/storage-queue';
 
-import { CaptureJob, CaptureJobSchema } from '@capture-automation-platform/shared-types';
+import { RenderJob, RenderJobSchema } from '@elastic-artifact-engine/shared-types';
 
 import {
   AzureBlobStorageAdapter,
   AzureQueueAdapter,
   AzureTableMetadataAdapter
-} from '@capture-automation-platform/azure-adapters';
+} from '@elastic-artifact-engine/azure-adapters';
 
 describe('Azure Adapters (Integration with Azurite)', () => {
   const CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || 'UseDevelopmentStorage=true';
   const QUEUE_NAME = 'test-jobs';
-  const BLOB_CONTAINER_NAME = 'test-captures';
+  const BLOB_CONTAINER_NAME = 'test-artifacts';
   const TABLE_NAME = 'TestMetadata';
 
-  const queue = AzureQueueAdapter.fromConnectionString<CaptureJob>(CONNECTION_STRING, QUEUE_NAME, 5, CaptureJobSchema);
+  const queue = AzureQueueAdapter.fromConnectionString<RenderJob>(CONNECTION_STRING, QUEUE_NAME, 5, RenderJobSchema);
   const storage = AzureBlobStorageAdapter.fromConnectionString(CONNECTION_STRING, BLOB_CONTAINER_NAME);
   const metadata = AzureTableMetadataAdapter.fromConnectionString(CONNECTION_STRING, TABLE_NAME);
 
@@ -42,7 +42,7 @@ describe('Azure Adapters (Integration with Azurite)', () => {
 
   describe('AzureQueueAdapter', () => {
     it('should enqueue and receive a message', async () => {
-      const job: CaptureJob = {
+      const job: RenderJob = {
         id: 'test-job-listen',
         url: 'https://example.com',
         type: 'pdf',
@@ -63,7 +63,7 @@ describe('Azure Adapters (Integration with Azurite)', () => {
     });
 
     it('should push a message', async () => {
-      const job: CaptureJob = {
+      const job: RenderJob = {
         id: 'test-job-push',
         url: 'https://example.com/push',
         type: 'png',
@@ -130,13 +130,13 @@ describe('Azure Adapters (Integration with Azurite)', () => {
       const adapter = AzureBlobStorageAdapter.fromCredential(
         'https://example.blob.core.windows.net',
         stubCredential,
-        'captures'
+        'artifacts'
       );
       assert.ok(adapter);
     });
 
     it('AzureQueueAdapter.fromCredential constructs', () => {
-      const adapter = AzureQueueAdapter.fromCredential<CaptureJob>(
+      const adapter = AzureQueueAdapter.fromCredential<RenderJob>(
         'https://example.queue.core.windows.net',
         stubCredential,
         'jobs'

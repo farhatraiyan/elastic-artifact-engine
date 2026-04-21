@@ -1,5 +1,5 @@
 import { HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
-import { MetadataService, StorageService } from '@capture-automation-platform/azure-adapters';
+import { MetadataService, StorageService } from '@elastic-artifact-engine/azure-adapters';
 
 export class StatusHandler {
   private readonly metadata: MetadataService;

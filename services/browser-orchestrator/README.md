@@ -1,24 +1,24 @@
 # Browser Orchestrator
 
-Node.js worker service utilizing Playwright for headless web capture jobs. Interfaces with Azure services via a decoupled adapter architecture.
+Node.js worker service utilizing Playwright for headless web render jobs. Interfaces with Azure services via a decoupled adapter architecture.
 
 ## 🚀 Capabilities
 
-* **Orchestration:** Listens to Azure Storage Queue (`CaptureJob`).
+* **Orchestration:** Listens to Azure Storage Queue (`RenderJob`).
 * **Browser Management:** Fresh Chromium contexts per job via Playwright.
-* **Capture Formats:** PDF, PNG (Full Page), Markdown (via Readability/Heuristics).
+* **Render Formats:** PDF, PNG (Full Page), Markdown (via Readability/Heuristics).
 * **Persistence:** Uploads artifacts to Azure Blob Storage; metadata to Azure Table Storage.
 * **Resilience:** Adaptive backoff for polling, automatic UI friction handling (cookie banners), auto-scrolling, and graceful shutdown.
 
 ## 🏗️ Architecture
 
-* **`Worker`**: Core coordinator between Queue, Capture, and Storage.
+* **`Worker`**: Core coordinator between Queue, Render, and Storage.
 * **`PlaywrightAdapter`**: Encapsulates browser logic and custom Turndown rules.
-* **`Azure Adapters`**: Infrastructure integration (`@capture-automation-platform/azure-adapters`).
+* **`Azure Adapters`**: Infrastructure integration (`@elastic-artifact-engine/azure-adapters`).
 
 ## 🛠️ Commands
 
-_Execute from workspace root: `npm run <script> --workspace @capture-automation-platform/browser-orchestrator`_
+_Execute from workspace root: `npm run <script> --workspace @elastic-artifact-engine/browser-orchestrator`_
 
 | Command | Description |
 | :--- | :--- |
@@ -40,7 +40,7 @@ Auth mode switches automatically based on the presence of `AZURE_STORAGE_ACCOUNT
 | `AZURE_STORAGE_CONNECTION_STRING` | `UseDevelopmentStorage=true` | Connection string (fallback for local/Azurite). |
 | `CONCURRENCY` | `2` | Max parallel jobs per instance. |
 | `MAX_RETRIES` | `5` | Max dequeue attempts before discard. |
-| `AZURE_STORAGE_BLOB_CONTAINER_NAME` | `captures` | Output blob container. |
+| `AZURE_STORAGE_BLOB_CONTAINER_NAME` | `artifacts` | Output blob container. |
 | `AZURE_STORAGE_QUEUE_NAME` | `jobs` | Source queue. |
 | `AZURE_STORAGE_TABLE_NAME` | `metadata` | Status tracking table. |
 

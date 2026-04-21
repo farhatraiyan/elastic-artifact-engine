@@ -1,4 +1,4 @@
-import { CaptureJob, CaptureType, JobStatus, JobState } from '@capture-automation-platform/shared-types';
+import { RenderJob, RenderType, JobStatus, JobState } from '@elastic-artifact-engine/shared-types';
 
 import { BlobServiceClient } from '@azure/storage-blob';
 import { QueueClient } from '@azure/storage-queue';
@@ -10,7 +10,7 @@ import * as path from 'path';
 async function main() {
   const CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || 'UseDevelopmentStorage=true';
 
-  const BLOB_CONTAINER_NAME = process.env.AZURE_STORAGE_BLOB_CONTAINER_NAME || 'captures';
+  const BLOB_CONTAINER_NAME = process.env.AZURE_STORAGE_BLOB_CONTAINER_NAME || 'artifacts';
   const QUEUE_NAME = process.env.AZURE_STORAGE_QUEUE_NAME || 'jobs';
   const TABLE_NAME = process.env.AZURE_STORAGE_TABLE_NAME || 'metadata';
   const OUTPUT_DIR = './scripts/output';
@@ -23,11 +23,11 @@ async function main() {
   }
 
   const url = args[0];
-  const type = (args.find(a => ['pdf', 'png', 'md'].includes(a)) as CaptureType) || 'pdf';
+  const type = (args.find(a => ['pdf', 'png', 'md'].includes(a)) as RenderType) || 'pdf';
   const isRaw = args.includes('--raw');
   const jobId = `job-${Date.now()}`;
 
-  console.log(`\n🚀 Initialising capture for: ${url}`);
+  console.log(`\n🚀 Initialising render for: ${url}`);
   console.log(`   Job ID: ${jobId}`);
   console.log(`   Type:   ${type} ${isRaw ? '(Raw)' : ''}`);
 
@@ -45,7 +45,7 @@ async function main() {
 
   console.log('📝 Creating table record and 📨 Pushing to queue...');
 
-  const job: CaptureJob = {
+  const job: RenderJob = {
     id: jobId,
     options: { width: 1280, height: 800, raw: isRaw },
     retryCount: 0,

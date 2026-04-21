@@ -1,5 +1,5 @@
 {
-  "name": "@capture-automation-platform/shared-types",
+  "name": "@elastic-artifact-engine/shared-types",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",

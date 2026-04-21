@@ -13,10 +13,10 @@ param sku string = 'Standard_LRS'
 @description('Principal ID (object ID) of the UAMI that will access this storage account. Retrieve from identity.bicep outputs.')
 param principalId string
 
-@description('Blob container name for capture artifacts.')
-param blobContainerName string = 'captures'
+@description('Blob container name for rendered artifacts.')
+param blobContainerName string = 'artifacts'
 
-@description('Queue name for capture jobs.')
+@description('Queue name for render jobs.')
 param queueName string = 'jobs'
 
 @description('Table name for job metadata.')
@@ -55,7 +55,7 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
   name: 'default'
 }
 
-resource captureContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+resource artifactContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobService
   name: blobContainerName
   properties: {
@@ -96,6 +96,6 @@ resource dataRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01
 
 output storageAccountName string = storage.name
 output storageAccountId string = storage.id
-output blobContainerName string = captureContainer.name
+output blobContainerName string = artifactContainer.name
 output queueName string = jobsQueue.name
 output tableName string = metadataTable.name

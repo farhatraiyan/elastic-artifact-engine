@@ -1,4 +1,4 @@
-import { JobStatus, JobState } from '@capture-automation-platform/shared-types';
+import { JobStatus, JobState } from '@elastic-artifact-engine/shared-types';
 import { RestError, TableClient } from '@azure/data-tables';
 import type { TokenCredential } from '@azure/core-auth';
 

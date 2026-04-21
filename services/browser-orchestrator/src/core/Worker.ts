@@ -1,7 +1,7 @@
-import { CaptureJob, QueueMessage } from '@capture-automation-platform/shared-types';
+import { RenderJob, QueueMessage } from '@elastic-artifact-engine/shared-types';
 
 import {
-  CaptureService,
+  RenderService,
   MetadataService,
   QueueService,
   StorageService
@@ -9,20 +9,20 @@ import {
 
 export class Worker {
   private abortController: AbortController | null = null;
-  private activeMessages = new Map<Promise<void>, QueueMessage<CaptureJob>>();
-  private capture: CaptureService;
+  private activeMessages = new Map<Promise<void>, QueueMessage<RenderJob>>();
+  private renderService: RenderService;
   private isRunning = false;
   private metadata: MetadataService;
-  private queue: QueueService<CaptureJob>;
+  private queue: QueueService<RenderJob>;
   private storage: StorageService;
 
-  private async processMessage(message: QueueMessage<CaptureJob>) {
+  private async processMessage(message: QueueMessage<RenderJob>) {
     const job = message.body;
 
     try {
       await this.metadata.updateStatus(job.id, 'Processing');
 
-      const data = await this.capture.capture(job);
+      const data = await this.renderService.render(job);
       const filename = `${job.id}.${job.type}`;
 
       const outputUrl = await this.storage.save(filename, data);
@@ -46,12 +46,12 @@ export class Worker {
   }
 
   constructor(
-    capture: CaptureService,
+    renderService: RenderService,
     metadata: MetadataService,
-    queue: QueueService<CaptureJob>,
+    queue: QueueService<RenderJob>,
     storage: StorageService
   ) {
-    this.capture = capture;
+    this.renderService = renderService;
     this.metadata = metadata;
     this.queue = queue;
     this.storage = storage;
@@ -67,7 +67,7 @@ export class Worker {
     this.abortController = controller;
 
     try {
-      await this.capture.init();
+      await this.renderService.init();
 
       for await (const message of this.queue.listen(controller.signal)) {
         if (!this.isRunning) {
@@ -92,7 +92,7 @@ export class Worker {
 
       await Promise.allSettled(abandonPromises);
 
-      await this.capture.close();
+      await this.renderService.close();
       this.isRunning = false;
     }
   }

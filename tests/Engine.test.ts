@@ -5,9 +5,9 @@ import { setTimeout } from 'node:timers/promises';
 describe('System Integration (E2E)', { timeout: 60000 }, () => {
   const API_URL = 'http://localhost:7071/api';
 
-  test('End-to-End: Capture -> Process -> Status -> Download', async () => {
-    console.log('Submitting capture request...');
-    const captureRes = await fetch(`${API_URL}/capture`, {
+  test('End-to-End: Render -> Process -> Status -> Download', async () => {
+    console.log('Submitting render request...');
+    const renderRes = await fetch(`${API_URL}/render`, {
       method: 'POST',
       body: JSON.stringify({
         url: 'https://example.com',
@@ -16,8 +16,8 @@ describe('System Integration (E2E)', { timeout: 60000 }, () => {
       headers: { 'Content-Type': 'application/json' }
     });
 
-    assert.strictEqual(captureRes.status, 202, 'Should return 202 Accepted');
-    const body = await captureRes.json() as any;
+    assert.strictEqual(renderRes.status, 202, 'Should return 202 Accepted');
+    const body = await renderRes.json() as any;
     const jobId = body.jobId;
     assert.ok(jobId, 'Should return a jobId');
 

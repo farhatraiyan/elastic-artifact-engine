@@ -1,5 +1,5 @@
 {
-  "name": "@capture-automation-platform/browser-orchestrator",
+  "name": "@elastic-artifact-engine/browser-orchestrator",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -9,13 +9,13 @@
     "dev": "tsx src/index.ts",
     "ingress": "tsx scripts/dev-cli.ts",
     "lint": "eslint .",
-    "start": "pm2 start ../../platform.config.cjs --only browser-orchestrator",
+    "start": "pm2 start ../../engine.config.cjs --only browser-orchestrator",
     "test": "node --import tsx --test --test-timeout=60000 tests/*.test.ts"
   },
   "dependencies": {
     "@azure/identity": "^4.0.0",
-    "@capture-automation-platform/azure-adapters": "*",
-    "@capture-automation-platform/shared-types": "*",
+    "@elastic-artifact-engine/azure-adapters": "*",
+    "@elastic-artifact-engine/shared-types": "*",
     "@mozilla/readability": "^0.6.0",
     "playwright-core": "^1.58.2",
     "turndown": "^7.2.2",

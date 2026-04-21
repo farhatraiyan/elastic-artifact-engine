@@ -6,12 +6,12 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import { TableClient } from '@azure/data-tables';
 import { QueueClient } from '@azure/storage-queue';
 
-import { CaptureJob, JobStatus } from '@capture-automation-platform/shared-types';
+import { RenderJob, JobStatus } from '@elastic-artifact-engine/shared-types';
 import {
   AzureBlobStorageAdapter,
   AzureQueueAdapter,
   AzureTableMetadataAdapter
-} from '@capture-automation-platform/azure-adapters';
+} from '@elastic-artifact-engine/azure-adapters';
 
 import { PlaywrightAdapter } from '../src/adapters/PlaywrightAdapter.js';
 import { Worker } from '../src/core/Worker.js';
@@ -19,7 +19,7 @@ import { Worker } from '../src/core/Worker.js';
 describe('Full Worker Integration', () => {
   const CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || 'UseDevelopmentStorage=true';
   const QUEUE_NAME = 'int-jobs';
-  const BLOB_CONTAINER_NAME = 'int-captures';
+  const BLOB_CONTAINER_NAME = 'int-artifacts';
   const TABLE_NAME = 'IntMetadata';
 
   let worker: Worker;
@@ -44,12 +44,12 @@ describe('Full Worker Integration', () => {
       blobServiceClient.getContainerClient(BLOB_CONTAINER_NAME).createIfNotExists()
     ]);
 
-    const capture = new PlaywrightAdapter();
+    const renderService = new PlaywrightAdapter();
     const metadata = AzureTableMetadataAdapter.fromConnectionString(CONNECTION_STRING, TABLE_NAME);
-    const queue = AzureQueueAdapter.fromConnectionString<CaptureJob>(CONNECTION_STRING, QUEUE_NAME);
+    const queue = AzureQueueAdapter.fromConnectionString<RenderJob>(CONNECTION_STRING, QUEUE_NAME);
     const storage = AzureBlobStorageAdapter.fromConnectionString(CONNECTION_STRING, BLOB_CONTAINER_NAME);
 
-    worker = new Worker(capture, metadata, queue, storage);
+    worker = new Worker(renderService, metadata, queue, storage);
   });
 
   after(async () => {
@@ -60,7 +60,7 @@ describe('Full Worker Integration', () => {
 
   it('should process a job from queue to blob storage', async () => {
     const jobId = `int-job-${Date.now()}`;
-    const job: CaptureJob = {
+    const job: RenderJob = {
       id: jobId,
       url: 'data:text/html,<h1>Integration Test</h1>',
       type: 'pdf',

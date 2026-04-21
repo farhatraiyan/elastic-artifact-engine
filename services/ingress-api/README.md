@@ -1,6 +1,6 @@
 # Ingress API (Gateway)
 
-Serverless Azure Functions service acting as the front door to the Capture Automation Platform.
+Serverless Azure Functions service acting as the front door to the Elastic Artifact Engine.
 
 ## 🚀 Capabilities
 
@@ -13,13 +13,13 @@ Serverless Azure Functions service acting as the front door to the Capture Autom
 
 Leverages Azure Functions HTTP triggers for scale-to-zero capabilities.
 
-* **`POST /api/capture`**: Enqueues job. Returns `202 Accepted` with `jobId`.
+* **`POST /api/render`**: Enqueues job. Returns `202 Accepted` with `jobId`.
 * **`GET /api/status/{jobId}`**: Table storage lookup. Generates SAS URL if complete.
 * **`GET /api/download/{jobId}`**: Convenience endpoint issuing `302 Redirect` to SAS URL.
 
 ## 🛠️ Commands
 
-_Execute from workspace root: `npm run <script> --workspace @capture-automation-platform/ingress-api`_
+_Execute from workspace root: `npm run <script> --workspace @elastic-artifact-engine/ingress-api`_
 
 | Command | Description |
 | :--- | :--- |

@@ -11,7 +11,7 @@ STAGE="$INGRESS_DIR/.stage"
 ZIP="$INGRESS_DIR/.stage.zip"
 
 echo "Building ingress-api..." >&2
-(cd "$REPO_ROOT" && npm run build --workspace @capture-automation-platform/ingress-api) >&2
+(cd "$REPO_ROOT" && npm run build --workspace @elastic-artifact-engine/ingress-api) >&2
 
 rm -rf "$STAGE" "$ZIP"
 mkdir -p "$STAGE/dist"

@@ -1,14 +1,14 @@
-import { CaptureJob, CaptureType } from '@capture-automation-platform/shared-types';
+import { RenderJob, RenderType } from '@elastic-artifact-engine/shared-types';
 
 import { Browser, Page, chromium } from 'playwright-core';
 // @ts-expect-error - plugin lacks types
 import { gfm } from 'turndown-plugin-gfm';
 import TurndownService from 'turndown';
 
-import { CaptureService } from '../core/interfaces.js';
+import { RenderService } from '../core/interfaces.js';
 import { ReadabilityProvider } from '../providers/ReadabilityProvider.js';
 
-export class PlaywrightAdapter implements CaptureService {
+export class PlaywrightAdapter implements RenderService {
   private browser: Browser | null = null;
 
   /**
@@ -42,10 +42,10 @@ export class PlaywrightAdapter implements CaptureService {
   }
 
   /**
-   * Captures the full page HTML and converts it to Markdown after
+   * Renders the full page HTML and converts it to Markdown after
    * stripping layout boilerplate (nav, footer, etc).
    */
-  private async captureRawMarkdown(page: Page): Promise<Buffer> {
+  private async renderRawMarkdown(page: Page): Promise<Buffer> {
     const turndownService = this.setupTurndown();
 
     const html = await page.evaluate(() => {
@@ -63,7 +63,7 @@ export class PlaywrightAdapter implements CaptureService {
    * Attempts to extract the main article content using Readability
    * with a heuristic fallback to common content containers.
    */
-  private async captureReaderMarkdown(page: Page): Promise<Buffer> {
+  private async renderReaderMarkdown(page: Page): Promise<Buffer> {
     const turndownService = this.setupTurndown();
     await ReadabilityProvider.inject(page);
 
@@ -203,7 +203,7 @@ export class PlaywrightAdapter implements CaptureService {
     return turndownService;
   }
 
-  async capture(job: CaptureJob): Promise<Buffer> {
+  async render(job: RenderJob): Promise<Buffer> {
     if (!this.browser) {
       await this.init();
     }
@@ -237,15 +237,15 @@ export class PlaywrightAdapter implements CaptureService {
         await page.waitForTimeout(job.options.waitForTimeout);
       }
 
-      const handlers: Record<CaptureType, () => Promise<Buffer>> = {
+      const handlers: Record<RenderType, () => Promise<Buffer>> = {
         pdf: () => page.pdf({
           margin: { top: '0', right: '0', bottom: '0', left: '0' },
           printBackground: true
         }),
         png: () => page.screenshot({ fullPage: true }),
         md: () => job.options?.raw
-          ? this.captureRawMarkdown(page)
-          : this.captureReaderMarkdown(page),
+          ? this.renderRawMarkdown(page)
+          : this.renderReaderMarkdown(page),
       };
 
       return await handlers[job.type]();

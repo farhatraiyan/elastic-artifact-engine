@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 export async function setup() {
   const CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || 'UseDevelopmentStorage=true';
 
-  const BLOB_CONTAINER_NAME = process.env.AZURE_STORAGE_BLOB_CONTAINER_NAME || 'captures';
+  const BLOB_CONTAINER_NAME = process.env.AZURE_STORAGE_BLOB_CONTAINER_NAME || 'artifacts';
   const QUEUE_NAME = process.env.AZURE_STORAGE_QUEUE_NAME || 'jobs';
   const TABLE_NAME = process.env.AZURE_STORAGE_TABLE_NAME || 'metadata';
 

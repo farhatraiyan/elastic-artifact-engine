@@ -1,6 +1,6 @@
 # Shared Types
 
-Single source of truth for all types and validation schemas used across the Capture Automation Platform.
+Single source of truth for all types and validation schemas used across the Elastic Artifact Engine.
 
 ## 🏗️ Design
 
@@ -9,7 +9,7 @@ Single source of truth for all types and validation schemas used across the Capt
 
 ## 📂 Core Concepts
 
-- **`CaptureJob`**: The data required to perform a web capture (URL, options, type).
+- **`RenderJob`**: The data required to perform a web render (URL, options, type).
 - **`JobStatus`**: State machine enum (`Queued`, `Processing`, `Completed`, `Failed`).
 - **`JobState`**: Tracking metadata including status, output URL, and errors.
 - **`QueueMessage`**: Wrapper for Azure Storage Queue payloads.
@@ -17,15 +17,15 @@ Single source of truth for all types and validation schemas used across the Capt
 ## 🛠️ Usage
 
 ```typescript
-import { CaptureJob, CaptureJobSchema } from "@capture-automation-platform/shared-types";
+import { RenderJob, RenderJobSchema } from "@elastic-artifact-engine/shared-types";
 
 // Parse and validate incoming data
-const job = CaptureJobSchema.parse(rawData);
+const job = RenderJobSchema.parse(rawData);
 ```
 
 ## 🚀 Commands
 
-_Execute from workspace root: `npm run <script> --workspace @capture-automation-platform/shared-types`_
+_Execute from workspace root: `npm run <script> --workspace @elastic-artifact-engine/shared-types`_
 
 | Command | Description |
 | :--- | :--- |

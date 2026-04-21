@@ -1,10 +1,10 @@
 import assert from 'node:assert';
 import { test, describe, beforeEach } from 'node:test';
 
-import { CaptureJob, QueueMessage } from '@capture-automation-platform/shared-types';
+import { RenderJob, QueueMessage } from '@elastic-artifact-engine/shared-types';
 
 import {
-  CaptureService,
+  RenderService,
   MetadataService,
   QueueService,
   StorageService
@@ -12,13 +12,13 @@ import {
 import { Worker } from '../src/core/Worker.js';
 
 describe('Worker', () => {
-  let mockCapture: CaptureService;
+  let mockRenderService: RenderService;
   let mockMetadata: MetadataService;
-  let mockQueue: QueueService<CaptureJob>;
+  let mockQueue: QueueService<RenderJob>;
   let mockStorage: StorageService;
   let worker: Worker;
 
-  const sampleJob: CaptureJob = {
+  const sampleJob: RenderJob = {
     id: 'job-1',
     url: 'https://example.com',
     type: 'pdf',
@@ -26,15 +26,15 @@ describe('Worker', () => {
     retryCount: 0
   };
 
-  const sampleMessage: QueueMessage<CaptureJob> = {
+  const sampleMessage: QueueMessage<RenderJob> = {
     id: 'msg-1',
     body: sampleJob,
     popReceipt: 'receipt-1'
   };
 
   beforeEach(() => {
-    mockCapture = {
-      capture: async () => Buffer.from('fake-pdf'),
+    mockRenderService = {
+      render: async () => Buffer.from('fake-pdf'),
       close: async () => {},
       init: async () => {}
     };
@@ -55,18 +55,18 @@ describe('Worker', () => {
       push: async () => {}
     };
 
-    worker = new Worker(mockCapture, mockMetadata, mockQueue, mockStorage);
+    worker = new Worker(mockRenderService, mockMetadata, mockQueue, mockStorage);
   });
 
   test('should process multiple jobs in parallel up to concurrency limit', async () => {
-    const job1: CaptureJob = { ...sampleJob, id: 'job-1' };
-    const job2: CaptureJob = { ...sampleJob, id: 'job-2' };
-    const job3: CaptureJob = { ...sampleJob, id: 'job-3' };
+    const job1: RenderJob = { ...sampleJob, id: 'job-1' };
+    const job2: RenderJob = { ...sampleJob, id: 'job-2' };
+    const job3: RenderJob = { ...sampleJob, id: 'job-3' };
 
     let activeCount = 0;
     let maxActiveCount = 0;
 
-    mockCapture.capture = async () => {
+    mockRenderService.render = async () => {
       activeCount++;
       maxActiveCount = Math.max(maxActiveCount, activeCount);
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -95,8 +95,8 @@ describe('Worker', () => {
       statusUpdates.push(status);
     };
 
-    let completedMessage: QueueMessage<CaptureJob> | null = null;
-    const completeStub = async (msg: QueueMessage<CaptureJob>) => {
+    let completedMessage: QueueMessage<RenderJob> | null = null;
+    const completeStub = async (msg: QueueMessage<RenderJob>) => {
       completedMessage = msg;
     };
     mockQueue.complete = completeStub;
@@ -109,21 +109,21 @@ describe('Worker', () => {
 
     assert.deepStrictEqual(statusUpdates, ['Processing', 'Completed']);
     assert.ok(completedMessage);
-    assert.strictEqual((completedMessage as QueueMessage<CaptureJob>).id, 'msg-1');
+    assert.strictEqual((completedMessage as QueueMessage<RenderJob>).id, 'msg-1');
   });
 
-  test('should handle capture failure and update status to Failed', async () => {
+  test('should handle render failure and update status to Failed', async () => {
     const statusUpdates: string[] = [];
     mockMetadata.updateStatus = async (id: string, status: string) => {
       statusUpdates.push(status);
     };
 
-    mockCapture.capture = async () => {
-      throw new Error('Capture failed');
+    mockRenderService.render = async () => {
+      throw new Error('Render failed');
     };
 
-    let abandonedMessage: QueueMessage<CaptureJob> | null = null;
-    const abandonStub = async (msg: QueueMessage<CaptureJob>) => {
+    let abandonedMessage: QueueMessage<RenderJob> | null = null;
+    const abandonStub = async (msg: QueueMessage<RenderJob>) => {
       abandonedMessage = msg;
     };
     mockQueue.abandon = abandonStub;
@@ -135,16 +135,16 @@ describe('Worker', () => {
 
     assert.ok(statusUpdates.includes('Failed'));
     assert.ok(abandonedMessage);
-    assert.strictEqual((abandonedMessage as QueueMessage<CaptureJob>).id, 'msg-1');
+    assert.strictEqual((abandonedMessage as QueueMessage<RenderJob>).id, 'msg-1');
   });
 
   test('should abandon in-flight jobs on stop', async () => {
     const abandonedMessages: string[] = [];
-    mockQueue.abandon = async (msg: QueueMessage<CaptureJob>) => {
+    mockQueue.abandon = async (msg: QueueMessage<RenderJob>) => {
       abandonedMessages.push(msg.id);
     };
 
-    mockCapture.capture = async () => {
+    mockRenderService.render = async () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       return Buffer.from('fake');
     };

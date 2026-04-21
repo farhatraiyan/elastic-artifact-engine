@@ -1,5 +1,5 @@
 import { QueueClient } from '@azure/storage-queue';
-import { QueueMessage } from '@capture-automation-platform/shared-types';
+import { QueueMessage } from '@elastic-artifact-engine/shared-types';
 import type { TokenCredential } from '@azure/core-auth';
 import { setTimeout } from 'timers/promises';
 

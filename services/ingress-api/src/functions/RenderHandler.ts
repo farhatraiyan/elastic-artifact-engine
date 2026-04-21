@@ -1,13 +1,13 @@
-import { CaptureJob, CaptureJobSchema } from '@capture-automation-platform/shared-types';
+import { RenderJob, RenderJobSchema } from '@elastic-artifact-engine/shared-types';
 import { HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
-import { MetadataService, QueueService } from '@capture-automation-platform/azure-adapters';
+import { MetadataService, QueueService } from '@elastic-artifact-engine/azure-adapters';
 import { randomUUID } from 'crypto';
 
-export class CaptureHandler {
+export class RenderHandler {
   private readonly metadata: MetadataService;
-  private readonly queue: QueueService<CaptureJob>;
+  private readonly queue: QueueService<RenderJob>;
 
-  constructor(metadata: MetadataService, queue: QueueService<CaptureJob>) {
+  constructor(metadata: MetadataService, queue: QueueService<RenderJob>) {
     this.metadata = metadata;
     this.queue = queue;
   }
@@ -18,7 +18,7 @@ export class CaptureHandler {
     try {
       const body = await request.json() as Record<string, unknown>;
 
-      const validationResult = CaptureJobSchema.safeParse({
+      const validationResult = RenderJobSchema.safeParse({
         ...body,
         id: randomUUID()
       });
@@ -46,7 +46,7 @@ export class CaptureHandler {
         status: 202
       };
     } catch (error: unknown) {
-      context.error('Error in capture function:', error);
+      context.error('Error in render function:', error);
 
       return {
         jsonBody: { error: 'Internal Server Error' },

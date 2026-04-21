@@ -1,8 +1,8 @@
-import { CaptureJob } from '@capture-automation-platform/shared-types';
-export { MetadataService, QueueService, StorageService } from '@capture-automation-platform/azure-adapters';
+import { RenderJob } from '@elastic-artifact-engine/shared-types';
+export { MetadataService, QueueService, StorageService } from '@elastic-artifact-engine/azure-adapters';
 
-export interface CaptureService {
-  capture(job: CaptureJob): Promise<Buffer>;
+export interface RenderService {
+  render(job: RenderJob): Promise<Buffer>;
   close(): Promise<void>;
   init(): Promise<void>;
 }

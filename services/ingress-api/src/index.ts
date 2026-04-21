@@ -4,21 +4,21 @@ import {
   AzureBlobStorageAdapter,
   AzureQueueAdapter,
   AzureTableMetadataAdapter
-} from '@capture-automation-platform/azure-adapters';
-import { CaptureJob, CaptureJobSchema } from '@capture-automation-platform/shared-types';
+} from '@elastic-artifact-engine/azure-adapters';
+import { RenderJob, RenderJobSchema } from '@elastic-artifact-engine/shared-types';
 
-import { CaptureHandler } from './functions/CaptureHandler.js';
+import { RenderHandler } from './functions/RenderHandler.js';
 import { DownloadHandler } from './functions/DownloadHandler.js';
 import { StatusHandler } from './functions/StatusHandler.js';
 
 const ACCOUNT_NAME = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 
-const BLOB_CONTAINER_NAME = process.env.AZURE_STORAGE_BLOB_CONTAINER_NAME || 'captures';
+const BLOB_CONTAINER_NAME = process.env.AZURE_STORAGE_BLOB_CONTAINER_NAME || 'artifacts';
 const QUEUE_NAME = process.env.AZURE_STORAGE_QUEUE_NAME || 'jobs';
 const TABLE_NAME = process.env.AZURE_STORAGE_TABLE_NAME || 'metadata';
 
 let metadata: AzureTableMetadataAdapter;
-let queue: AzureQueueAdapter<CaptureJob>;
+let queue: AzureQueueAdapter<RenderJob>;
 let storage: AzureBlobStorageAdapter;
 
 if (ACCOUNT_NAME) {
@@ -29,23 +29,23 @@ if (ACCOUNT_NAME) {
   const credential = new DefaultAzureCredential();
 
   metadata = AzureTableMetadataAdapter.fromCredential(tableUrl, credential, TABLE_NAME);
-  queue = AzureQueueAdapter.fromCredential<CaptureJob>(queueUrl, credential, QUEUE_NAME, undefined, CaptureJobSchema);
+  queue = AzureQueueAdapter.fromCredential<RenderJob>(queueUrl, credential, QUEUE_NAME, undefined, RenderJobSchema);
   storage = AzureBlobStorageAdapter.fromCredential(blobUrl, credential, BLOB_CONTAINER_NAME);
 } else {
   const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || 'UseDevelopmentStorage=true';
 
   metadata = AzureTableMetadataAdapter.fromConnectionString(connectionString, TABLE_NAME);
-  queue = AzureQueueAdapter.fromConnectionString<CaptureJob>(connectionString, QUEUE_NAME, undefined, CaptureJobSchema);
+  queue = AzureQueueAdapter.fromConnectionString<RenderJob>(connectionString, QUEUE_NAME, undefined, RenderJobSchema);
   storage = AzureBlobStorageAdapter.fromConnectionString(connectionString, BLOB_CONTAINER_NAME);
 }
 
-const captureHandler = new CaptureHandler(metadata, queue);
+const renderHandler = new RenderHandler(metadata, queue);
 const downloadHandler = new DownloadHandler(metadata, storage);
 const statusHandler = new StatusHandler(metadata, storage);
 
-app.http('capture', {
+app.http('render', {
   authLevel: 'function',
-  handler: captureHandler.handle.bind(captureHandler),
+  handler: renderHandler.handle.bind(renderHandler),
   methods: ['POST']
 });
 

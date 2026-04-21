@@ -17,7 +17,7 @@ param identityClientId string
 
 @minLength(3)
 @maxLength(24)
-@description('Storage account name that backs the platform. Retrieve from storage.bicep outputs. 3-24 lowercase alphanumeric chars per Azure Storage rules.')
+@description('Storage account name that backs the engine. Retrieve from storage.bicep outputs. 3-24 lowercase alphanumeric chars per Azure Storage rules.')
 param storageAccountName string
 
 @description('Deployment storage container name. Flex Consumption stores the deployment zip here.')
@@ -34,10 +34,10 @@ param instanceMemoryMB int = 512
 @description('Maximum instance count for the Flex plan. Raise from 40 only if throughput metrics show saturation, and consider rate-limiting first.')
 param maximumInstanceCount int = 40
 
-@description('Blob container for capture artifacts. Exposed to the app as AZURE_STORAGE_BLOB_CONTAINER_NAME.')
-param blobContainerName string = 'captures'
+@description('Blob container for rendered artifacts. Exposed to the app as AZURE_STORAGE_BLOB_CONTAINER_NAME.')
+param blobContainerName string = 'artifacts'
 
-@description('Queue name for capture jobs. Exposed to the app as AZURE_STORAGE_QUEUE_NAME.')
+@description('Queue name for render jobs. Exposed to the app as AZURE_STORAGE_QUEUE_NAME.')
 param queueName string = 'jobs'
 
 @description('Table name for job metadata. Exposed to the app as AZURE_STORAGE_TABLE_NAME.')

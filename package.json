@@ -1,5 +1,5 @@
 {
-  "name": "capture-automation-platform",
+  "name": "elastic-artifact-engine",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -21,12 +21,12 @@
     "lint": "npm run lint --workspaces",
     "orchestrator:docker:run": "docker run -d --rm --network host --name browser-orchestrator browser-orchestrator",
     "stage:ingress-api": "bash scripts/stage-ingress-api.sh",
-    "start": "wait-on tcp:10000 tcp:10001 tcp:10002 && pm2 start platform.config.cjs && wait-on tcp:7071",
-    "start:ingress": "wait-on tcp:10000 tcp:10001 tcp:10002 && pm2 start platform.config.cjs --only ingress-api && wait-on tcp:7071",
-    "start:orchestrator": "wait-on tcp:10000 tcp:10001 tcp:10002 && pm2 start platform.config.cjs --only browser-orchestrator",
+    "start": "wait-on tcp:10000 tcp:10001 tcp:10002 && pm2 start engine.config.cjs && wait-on tcp:7071",
+    "start:ingress": "wait-on tcp:10000 tcp:10001 tcp:10002 && pm2 start engine.config.cjs --only ingress-api && wait-on tcp:7071",
+    "start:orchestrator": "wait-on tcp:10000 tcp:10001 tcp:10002 && pm2 start engine.config.cjs --only browser-orchestrator",
     "teardown": "npm run azurite:down && npx pm2 kill || true && pkill -f \"func start\" || true && pkill -f \"node services/browser-orchestrator/dist/index.js\" || true",
     "test": "npm run build && npm test --workspaces --if-present",
-    "test:platform": "node --import tsx --test --test-timeout=60000 tests/Platform.test.ts"
+    "test:engine": "node --import tsx --test --test-timeout=60000 tests/Engine.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

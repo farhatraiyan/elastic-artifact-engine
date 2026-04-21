@@ -1,6 +1,6 @@
 # Deployment Infrastructure
 
-Bicep modules and deployment commands for the Capture Automation Platform.
+Bicep modules and deployment commands for the Elastic Artifact Engine.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ Bicep modules and deployment commands for the Capture Automation Platform.
 Everything is scoped to a single resource group:
 
 ```bash
-RG="rg-capture-automation-platform-dev"
+RG="rg-elastic-artifact-engine-dev"
 LOCATION="eastus"
 
 az group create --name $RG --location $LOCATION
@@ -26,7 +26,7 @@ az group create --name $RG --location $LOCATION
 
 ### 1. Identity (`identity.bicep`)
 
-Provisions the platform's User-Assigned Managed Identity (UAMI).
+Provisions the engine's User-Assigned Managed Identity (UAMI).
 
 ```bash
 az deployment group create \
@@ -121,7 +121,7 @@ az deployment group create \
 
 ### Ingress API
 
-The Function App requires a pre-compiled `.zip` payload because remote Oryx builds cannot resolve local workspace packages (`@capture-automation-platform/*`).
+The Function App requires a pre-compiled `.zip` payload because remote Oryx builds cannot resolve local workspace packages (`@elastic-artifact-engine/*`).
 
 ```bash
 # 1. Stage the deployment bundle
@@ -157,7 +157,7 @@ az containerapp update \
 
 ### Post-deploy Verification
 
-End-to-end smoketest (health → capture → poll → download):
+End-to-end smoketest (health → render → poll → download):
 
 ```bash
 FUNC_NAME=$(az functionapp list --resource-group $RG --query "[0].name" -o tsv)
@@ -165,7 +165,7 @@ FUNC_KEY=$(az functionapp keys list --name $FUNC_NAME --resource-group $RG --que
 
 curl -s -o /dev/null -w "health HTTP %{http_code}\n" "https://${FUNC_NAME}.azurewebsites.net/api/health"
 
-JOB_ID=$(curl -s -X POST "https://${FUNC_NAME}.azurewebsites.net/api/capture?code=${FUNC_KEY}" \
+JOB_ID=$(curl -s -X POST "https://${FUNC_NAME}.azurewebsites.net/api/render?code=${FUNC_KEY}" \
   -H "Content-Type: application/json" \
   -d '{"url":"https://example.com","type":"pdf"}' | jq -r .jobId)
 
@@ -185,7 +185,7 @@ curl -s -L "https://${FUNC_NAME}.azurewebsites.net/api/download/${JOB_ID}?code=$
 file /tmp/${JOB_ID}.pdf
 ```
 
-Expected: `health HTTP 200`, `download HTTP 200, size=14733`, `PDF document, version 1.4, 1 pages`. The capture of `https://example.com` is deterministic; a meaningfully different byte count means the capture path changed.
+Expected: `health HTTP 200`, `download HTTP 200, size=14733`, `PDF document, version 1.4, 1 pages`. The render of `https://example.com` is deterministic; a meaningfully different byte count means the render path changed.
 
 ### Troubleshooting `/api/health` 404
 
@@ -216,3 +216,4 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 ```bash
 az group delete --name $RG --yes --no-wait
 ```
+

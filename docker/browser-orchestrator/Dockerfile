@@ -16,7 +16,7 @@ COPY packages/shared-types ./packages/shared-types
 COPY packages/azure-adapters ./packages/azure-adapters
 COPY services/browser-orchestrator ./services/browser-orchestrator
 
-RUN npm run build --workspace @capture-automation-platform/browser-orchestrator
+RUN npm run build --workspace @elastic-artifact-engine/browser-orchestrator
 
 # Stage 2: Final Image
 FROM node:20-slim

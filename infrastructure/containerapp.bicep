@@ -27,8 +27,8 @@ param acrLoginServer string
 @description('Container image reference. Default assumes browser-orchestrator:latest has been pushed to the ACR.')
 param containerImage string = '${acrLoginServer}/browser-orchestrator:latest'
 
-@description('Blob container for capture artifacts. Exposed as AZURE_STORAGE_BLOB_CONTAINER_NAME.')
-param blobContainerName string = 'captures'
+@description('Blob container for rendered artifacts. Exposed as AZURE_STORAGE_BLOB_CONTAINER_NAME.')
+param blobContainerName string = 'artifacts'
 
 @description('Queue name. Used both as AZURE_STORAGE_QUEUE_NAME and as the KEDA scaler target.')
 param queueName string = 'jobs'

@@ -1,6 +1,6 @@
-# Capture Automation Platform
+# Elastic Artifact Engine
 
-Cloud-native browserless web capture service for high-scale automation workflows. Leverages containerized Playwright instances to extract intelligent data.
+Cloud-native browserless web render service for high-scale automation workflows. Leverages containerized Playwright instances to extract intelligent data.
 
 ## 🏗️ Architecture
 
@@ -11,7 +11,7 @@ Implements the **Asynchronous Request-Reply** pattern with queue-based load leve
 * **Scale-to-Zero:** Deployed on Azure Container Apps (ACA) with KEDA queue-length scaling.
 * **Markdown Extraction:** Mozilla Readability integration for clean, LLM-optimized content.
 
-[View Architecture Diagram](https://github.com/farhatraiyan/capture-automation-platform/blob/main/docs/architecture.png)
+[View Architecture Diagram](https://github.com/farhatraiyan/elastic-artifact-engine/blob/main/docs/architecture.png)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
@@ -22,7 +22,7 @@ Implements the **Asynchronous Request-Reply** pattern with queue-based load leve
 ## 📂 Structure
 
 ```text
-/capture-automation-platform
+/elastic-artifact-engine
 ├── .github/workflows/         # CI/CD: QA pipelines
 ├── infrastructure/            # Azure Bicep IaC modules
 ├── packages/                  # Shared Logic/Types
@@ -30,7 +30,7 @@ Implements the **Asynchronous Request-Reply** pattern with queue-based load leve
 │   └── shared-types/          # Shared job and status schemas
 ├── scripts/                   # Dev tooling
 ├── services/                  # Microservices
-│   ├── browser-orchestrator/  # Playwright capture worker (ACA)
+│   ├── browser-orchestrator/  # Playwright render worker (ACA)
 │   └── ingress-api/           # HTTP gateway (AFA)
 └── web/                       # Manual submission UI (planned)
 ```
@@ -72,12 +72,12 @@ npm run build
 | :--- | :--- |
 | `npm run azurite:up` | Starts Azurite and initializes storage resources. |
 | `npm run start` | Starts background services (Ingress + Worker) via PM2. Requires Azurite. |
-| `npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- <url> [type]` | Submits a capture job via CLI. |
+| `npm run ingress --workspace @elastic-artifact-engine/browser-orchestrator -- <url> [type]` | Submits a render job via CLI. |
 | `npx pm2 status` | View service status. |
 | `npx pm2 logs` | Tail service logs. |
 | `npm run teardown` | Stops PM2 services and Azurite. |
 | `npm test --workspace <name>` | Runs isolated workspace tests. |
-| `npm run test:platform` | Runs E2E integration tests. |
+| `npm run test:engine` | Runs E2E integration tests. |
 
 ## ☁️ Cloud Deployment
 

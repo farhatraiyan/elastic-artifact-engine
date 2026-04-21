@@ -113,26 +113,26 @@ jobs:
           needs.pre-check.outputs.azure-adapters == 'true' ||
           needs.pre-check.outputs.shared-types == 'true' ||
           github.event_name == 'workflow_dispatch' && inputs.force_run_all == true
-        run: npm test --workspace @capture-automation-platform/azure-adapters
+        run: npm test --workspace @elastic-artifact-engine/azure-adapters
 
       - name: Run Ingress API Tests
         if: |
           needs.pre-check.outputs.ingress == 'true' ||
           needs.pre-check.outputs.shared-types == 'true' ||
           github.event_name == 'workflow_dispatch' && inputs.force_run_all == true
-        run: npm test --workspace @capture-automation-platform/ingress-api
+        run: npm test --workspace @elastic-artifact-engine/ingress-api
 
       - name: Run Worker Tests
         if: |
           needs.pre-check.outputs.core == 'true' ||
           needs.pre-check.outputs.shared-types == 'true' ||
           github.event_name == 'workflow_dispatch' && inputs.force_run_all == true
-        run: npm test --workspace @capture-automation-platform/browser-orchestrator
+        run: npm test --workspace @elastic-artifact-engine/browser-orchestrator
 
       - name: Run System Integration Tests
         run: |
           # Create local.settings.json for the API
-          echo '{"IsEncrypted":false,"Values":{"AzureWebJobsStorage":"UseDevelopmentStorage=true","FUNCTIONS_WORKER_RUNTIME":"node","AZURE_STORAGE_CONNECTION_STRING":"UseDevelopmentStorage=true","AZURE_STORAGE_BLOB_CONTAINER_NAME":"captures","AZURE_STORAGE_QUEUE_NAME":"jobs","AZURE_STORAGE_TABLE_NAME":"metadata"}}' > services/ingress-api/local.settings.json
+          echo '{"IsEncrypted":false,"Values":{"AzureWebJobsStorage":"UseDevelopmentStorage=true","FUNCTIONS_WORKER_RUNTIME":"node","AZURE_STORAGE_CONNECTION_STRING":"UseDevelopmentStorage=true","AZURE_STORAGE_BLOB_CONTAINER_NAME":"artifacts","AZURE_STORAGE_QUEUE_NAME":"jobs","AZURE_STORAGE_TABLE_NAME":"metadata"}}' > services/ingress-api/local.settings.json
           
           # Start Ingress API (direct)
           cd services/ingress-api && func start &
@@ -147,7 +147,7 @@ jobs:
           sleep 10
           
           # Run the E2E tests
-          npm run test:platform
+          npm run test:engine
 
       - name: Diagnostics (on failure)
         if: failure()

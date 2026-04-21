@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
-export const CAPTURE_TYPES = ['md', 'pdf', 'png'] as const;
+export const RENDER_TYPES = ['md', 'pdf', 'png'] as const;
 
-export const CaptureJobSchema = z.object({
+export const RenderJobSchema = z.object({
   id: z.string().min(1),
   url: z.string().url(),
-  type: z.enum(CAPTURE_TYPES),
+  type: z.enum(RENDER_TYPES),
   options: z.object({
     width: z.number().int().positive().optional().default(1280),
     height: z.number().int().positive().optional().default(800),
@@ -16,9 +16,9 @@ export const CaptureJobSchema = z.object({
   retryCount: z.number().int().nonnegative().optional().default(0),
 });
 
-export type CaptureJob = z.infer<typeof CaptureJobSchema>;
+export type RenderJob = z.infer<typeof RenderJobSchema>;
 
-export type CaptureType = (typeof CAPTURE_TYPES)[number];
+export type RenderType = (typeof RENDER_TYPES)[number];
 
 export type JobState = {
   status: JobStatus;

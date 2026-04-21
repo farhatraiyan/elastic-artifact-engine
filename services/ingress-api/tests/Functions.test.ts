@@ -1,11 +1,11 @@
 import assert from 'node:assert';
 import { test, describe } from 'node:test';
 
-import { CaptureJob } from '@capture-automation-platform/shared-types';
+import { RenderJob } from '@elastic-artifact-engine/shared-types';
 import { HttpRequest, InvocationContext } from '@azure/functions';
-import { MetadataService, QueueService, StorageService } from '@capture-automation-platform/azure-adapters';
+import { MetadataService, QueueService, StorageService } from '@elastic-artifact-engine/azure-adapters';
 
-import { CaptureHandler } from '../src/functions/CaptureHandler.js';
+import { RenderHandler } from '../src/functions/RenderHandler.js';
 import { DownloadHandler } from '../src/functions/DownloadHandler.js';
 import { StatusHandler } from '../src/functions/StatusHandler.js';
 
@@ -43,20 +43,20 @@ describe('Ingress API Functions (Unit Tests)', () => {
 
   const mockQueue = {
     push: async () => { }
-  } as unknown as QueueService<CaptureJob>;
+  } as unknown as QueueService<RenderJob>;
 
   const mockStorage = {
     generateReadSasUrl: async () => 'http://sas-url'
   } as unknown as StorageService;
 
-  test('capture should return 400 for invalid request', async () => {
-    const captureHandler = new CaptureHandler(mockMetadata, mockQueue);
+  test('render should return 400 for invalid request', async () => {
+    const renderHandler = new RenderHandler(mockMetadata, mockQueue);
     const req = mockRequest({
       method: 'POST',
       body: { url: 'invalid-url' }
     });
 
-    const res = await captureHandler.handle(req, mockContext);
+    const res = await renderHandler.handle(req, mockContext);
     assert.strictEqual(res.status, 400);
   });
 
@@ -76,7 +76,7 @@ describe('Ingress API Functions (Unit Tests)', () => {
       getJobState: async () => ({
         status: 'Completed',
         updatedAt: new Date(),
-        outputUrl: 'https://storage.com/captures/job1.pdf'
+        outputUrl: 'https://storage.com/artifacts/job1.pdf'
       })
     } as unknown as MetadataService;
 
@@ -134,7 +134,7 @@ describe('Ingress API Functions (Unit Tests)', () => {
       getJobState: async () => ({
         status: 'Completed',
         updatedAt: new Date(),
-        outputUrl: 'https://storage.com/captures/job1.pdf'
+        outputUrl: 'https://storage.com/artifacts/job1.pdf'
       })
     } as unknown as MetadataService;
 
