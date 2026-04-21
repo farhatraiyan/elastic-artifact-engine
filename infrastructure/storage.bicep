@@ -42,10 +42,11 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   kind: 'StorageV2'
   properties: {
-    // Temporarily allowing shared-key access so the existing connection-string-based
-    // app code can be smoke-tested against the deployed platform. UAMI still has
-    // full data-plane roles and is used by KEDA, ACR pull, and Flex deployment storage.
-    // Should be flipped to `false` once the adapters migrate to DefaultAzureCredential.
+    // Shared-key access remains enabled because the Functions runtime state store
+    // (AzureWebJobsStorage in functions.bicep) still uses a connection string.
+    // The app-level adapters have already migrated to DefaultAzureCredential, so
+    // flip to `false` once AzureWebJobsStorage migrates to identity-based config
+    // (AzureWebJobsStorage__accountName + __credential=managedidentity).
     allowSharedKeyAccess: true
     allowBlobPublicAccess: false
     minimumTlsVersion: 'TLS1_2'

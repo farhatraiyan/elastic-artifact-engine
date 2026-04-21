@@ -51,7 +51,10 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
 }
 
 // Connection string composed at deploy time from the account's live keys.
-// Used for the Functions runtime state store and the app-level adapters.
+// Used only for the Functions runtime state store (AzureWebJobsStorage).
+// App-level adapters now use DefaultAzureCredential against the UAMI; remove
+// this var once AzureWebJobsStorage also migrates to identity-based config
+// (AzureWebJobsStorage__accountName + __credential=managedidentity).
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
 
 resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = {
@@ -119,18 +122,18 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {
       appSettings: [
         // Classic AzureWebJobsStorage connection string (Functions runtime state).
-        // Temporarily shared-key based to support the existing connection-string
-        // app code; switch to the identity-based __accountName/__credential/__clientId
-        // triplet once the adapters migrate to DefaultAzureCredential.
+        // Still shared-key because Flex Consumption's runtime-state migration to
+        // identity (AzureWebJobsStorage__accountName + __credential=managedidentity)
+        // is tracked separately. The ingress-api adapters themselves use
+        // DefaultAzureCredential via AZURE_STORAGE_ACCOUNT_NAME below.
         {
           name: 'AzureWebJobsStorage'
           value: storageConnectionString
         }
-        // App-level connection string read by ingress-api adapters.
-        {
-          name: 'AZURE_STORAGE_CONNECTION_STRING'
-          value: storageConnectionString
-        }
+        // App-level adapters authenticate via DefaultAzureCredential against
+        // the UAMI. AZURE_CLIENT_ID disambiguates which UAMI to use;
+        // AZURE_STORAGE_ACCOUNT_NAME triggers the identity branch in service
+        // wiring (which derives blob/queue/table URLs from it).
         {
           name: 'AZURE_CLIENT_ID'
           value: identityClientId

@@ -1,13 +1,22 @@
 import { JobStatus, JobState } from '@capture-automation-platform/shared-types';
 import { RestError, TableClient } from '@azure/data-tables';
+import type { TokenCredential } from '@azure/core-auth';
 
 import { MetadataService } from '../core/interfaces.js';
 
 export class AzureTableMetadataAdapter implements MetadataService {
   private tableClient: TableClient;
 
-  constructor(connectionString: string, tableName: string) {
-    this.tableClient = TableClient.fromConnectionString(connectionString, tableName);
+  private constructor(tableClient: TableClient) {
+    this.tableClient = tableClient;
+  }
+
+  static fromConnectionString(connectionString: string, tableName: string): AzureTableMetadataAdapter {
+    return new AzureTableMetadataAdapter(TableClient.fromConnectionString(connectionString, tableName));
+  }
+
+  static fromCredential(accountUrl: string, credential: TokenCredential, tableName: string): AzureTableMetadataAdapter {
+    return new AzureTableMetadataAdapter(new TableClient(accountUrl, tableName, credential));
   }
 
   async getJobState(jobId: string): Promise<JobState | undefined> {

@@ -1,4 +1,5 @@
 import { QueueClient } from '@azure/storage-queue';
+import type { TokenCredential } from '@azure/core-auth';
 import { QueueMessage } from '@capture-automation-platform/shared-types';
 import { setTimeout } from 'timers/promises';
 
@@ -17,10 +18,29 @@ export class AzureQueueAdapter<T> implements QueueService<T> {
     } catch { /* ignore */ }
   }
 
-  constructor(connectionString: string, queueName: string, maxRetries: number = 5, schema?: Schema<T>) {
-    this.queueClient = new QueueClient(connectionString, queueName);
+  private constructor(queueClient: QueueClient, maxRetries: number, schema?: Schema<T>) {
+    this.queueClient = queueClient;
     this.maxRetries = maxRetries;
     this.schema = schema;
+  }
+
+  static fromConnectionString<T>(
+    connectionString: string,
+    queueName: string,
+    maxRetries: number = 5,
+    schema?: Schema<T>
+  ): AzureQueueAdapter<T> {
+    return new AzureQueueAdapter<T>(new QueueClient(connectionString, queueName), maxRetries, schema);
+  }
+
+  static fromCredential<T>(
+    accountUrl: string,
+    credential: TokenCredential,
+    queueName: string,
+    maxRetries: number = 5,
+    schema?: Schema<T>
+  ): AzureQueueAdapter<T> {
+    return new AzureQueueAdapter<T>(new QueueClient(`${accountUrl}/${queueName}`, credential), maxRetries, schema);
   }
 
   async abandon(message: QueueMessage<T>): Promise<void> {

@@ -67,9 +67,9 @@ Both `principalId` and `clientId` must be non-empty GUIDs. `principalId` is what
 
 ### `storage.bicep`
 
-Provisions the Storage Account that backs the platform. Creates the blob container (`captures`), queue (`jobs`), and table (`metadata`) as child resources, and grants the UAMI three Storage data-plane roles (Blob Data Owner + Queue/Table Data Contributor) scoped to the account. Currently ships with `allowSharedKeyAccess: true`, as the UAMI is used end-to-end for KEDA queue polling, ACR pull, and Flex deployment-storage reads. However, the app-level adapters in `packages/azure-adapters` still read a connection string, so shared-key auth is kept enabled for them.
+Provisions the Storage Account that backs the platform. Creates the blob container (`captures`), queue (`jobs`), and table (`metadata`) as child resources, and grants the UAMI three Storage data-plane roles (Blob Data Owner + Queue/Table Data Contributor) scoped to the account. The UAMI handles KEDA queue polling, ACR pull, Flex deployment-storage reads, and (post adapter migration) all app-level Blob/Queue/Table calls via `DefaultAzureCredential`.
 
-Note: Tightening to `allowSharedKeyAccess: false` is gated on migrating those adapters to `DefaultAzureCredential`. The Bicep comment around that property calls out the temporary nature.
+Note: `allowSharedKeyAccess` is still `true` because the Functions runtime state store (`AzureWebJobsStorage` in `functions.bicep`) is the last consumer of shared-key auth. Tightening to `false` is gated on migrating that setting to the identity-based `AzureWebJobsStorage__accountName` / `__credential=managedidentity` triplet. The Bicep comment around that property calls out the remaining blocker.
 
 **Template lineage:** storage-account shape and AAD-hardening from AVM [`avm/res/storage/storage-account`](https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/storage/storage-account). Three-role assignment pattern from the [`function-app-flex-managed-identities`](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.web/function-app-flex-managed-identities) quickstart.
 
@@ -114,7 +114,7 @@ az role assignment list \
   -o table
 ```
 
-**Expected:** `allowSharedKeyAccess: true`, `minTls: TLS1_2`, `bypass: AzureServices`, `defaultAction: Allow`; three role assignments (`Storage Blob Data Owner`, `Storage Queue Data Contributor`, `Storage Table Data Contributor`), all `principalType: ServicePrincipal`. Blob is Owner (not Contributor) because Flex Consumption's identity-based deployment storage requires Owner on the deployment account.
+**Expected:** `allowSharedKeyAccess: true` (gated on `AzureWebJobsStorage` migration — see note above), `minTls: TLS1_2`, `bypass: AzureServices`, `defaultAction: Allow`; three role assignments (`Storage Blob Data Owner`, `Storage Queue Data Contributor`, `Storage Table Data Contributor`), all `principalType: ServicePrincipal`. Blob is Owner (not Contributor) because Flex Consumption's identity-based deployment storage requires Owner on the deployment account.
 
 Child resources (`captures`/`jobs`/`metadata`) are not directly enumerable via `az resource list`. They're nested sub-subresources which only appear in the deployment's `outputResources` list. If you need to verify them independently, use `az deployment group show --name storage --resource-group <rg>`.
 
@@ -190,13 +190,13 @@ Pushing the image before `containerapp.bicep` deploys (below) is deliberate: whe
 
 ### `functions.bicep`
 
-Provisions the Flex Consumption Function App hosting the `ingress-api` service, alongside its Flex plan and a `deployment` blob container which holds the zip package that Flex pulls at cold start. The UAMI is attached and used for Flex's deployment-storage pull, so the Function App's identity can read the zip from the `deployment` container using its Blob Data Owner role. Runtime app settings currently include a plain `AzureWebJobsStorage` connection string and `AZURE_STORAGE_CONNECTION_STRING` for the app-level adapters.
+Provisions the Flex Consumption Function App hosting the `ingress-api` service, alongside its Flex plan and a `deployment` blob container which holds the zip package that Flex pulls at cold start. The UAMI is attached and used for Flex's deployment-storage pull, so the Function App's identity can read the zip from the `deployment` container using its Blob Data Owner role. The app-level adapters now authenticate via `DefaultAzureCredential` — `AZURE_CLIENT_ID` + `AZURE_STORAGE_ACCOUNT_NAME` are emitted to the app settings and trigger the identity branch in service wiring. Only `AzureWebJobsStorage` (Functions runtime state) still uses a connection string.
 
-Note: This is the same temporary posture documented under `storage.bicep` above. Flipping to identity-based WebJobsStorage is possible following the same adapter migration.
+Note: Migrating `AzureWebJobsStorage` to the identity-based `AzureWebJobsStorage__accountName` / `__credential=managedidentity` / `__clientId` triplet is the last step before `storage.bicep` can flip `allowSharedKeyAccess: false`.
 
 **Template lineage:** Flex-Consumption `functionAppConfig.deployment.storage` with UserAssignedIdentity auth from Quickstart [`function-app-flex-managed-identities`](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.web/function-app-flex-managed-identities).
 
-Note: That same quickstart also documents the identity-based `AzureWebJobsStorage__accountName` / `__credential: 'managedidentity'` / `__clientId` triplet to be used once the adapter migration lands.
+Note: That same quickstart also documents the identity-based `AzureWebJobsStorage__accountName` / `__credential: 'managedidentity'` / `__clientId` triplet — the next step for fully removing shared-key auth from the storage account.
 
 **Deploy:**
 
@@ -256,13 +256,13 @@ az functionapp config appsettings list \
 **Expected:**
 - `state: Running`, `kind: functionapp,linux`, `identityType: UserAssigned`, one entry under `userAssignedIds`.
 - Plan `sku: FC1`, `tier: FlexConsumption`. (`reserved` returns `null` as Flex Consumption is Linux-implicit and the provider doesn't surface the property the way classic Linux plans do.)
-- App settings include `AzureWebJobsStorage` (connection string), `AZURE_STORAGE_CONNECTION_STRING`, `AZURE_CLIENT_ID`, `AZURE_STORAGE_ACCOUNT_NAME`, `AZURE_STORAGE_BLOB_CONTAINER_NAME`, `AZURE_STORAGE_QUEUE_NAME`, `AZURE_STORAGE_TABLE_NAME`.
+- App settings include `AzureWebJobsStorage` (connection string), `AZURE_CLIENT_ID`, `AZURE_STORAGE_ACCOUNT_NAME`, `AZURE_STORAGE_BLOB_CONTAINER_NAME`, `AZURE_STORAGE_QUEUE_NAME`, `AZURE_STORAGE_TABLE_NAME`. `AZURE_STORAGE_CONNECTION_STRING` is no longer set — the adapters use `DefaultAzureCredential` keyed off `AZURE_STORAGE_ACCOUNT_NAME`.
 
 Note: The identity-based `AzureWebJobsStorage__accountName` / `__credential` / `__clientId` triplet is *not* present at this time.
 
 ### `containerapp.bicep`
 
-Provisions the Container Apps Managed Environment and the `browser-orchestrator` Container App, which is the worker side of the async request-reply pipeline. The UAMI is attached and used for two things: pulling the image from ACR and authenticating the KEDA queue-length scaler against the `jobs` queue. The worker's app-level adapters currently read `AZURE_STORAGE_CONNECTION_STRING`, which is set on the Container App alongside the same `AZURE_STORAGE_ACCOUNT_NAME` and resource-name vars as the Function App. KEDA itself doesn't depend on that connection string. Scales 0-5 replicas driven by queue depth (not applied to ingress) as the worker only consumes messages.
+Provisions the Container Apps Managed Environment and the `browser-orchestrator` Container App, which is the worker side of the async request-reply pipeline. The UAMI is attached and used for three things: pulling the image from ACR, authenticating the KEDA queue-length scaler against the `jobs` queue, and serving as the credential source for the worker's app-level adapters via `DefaultAzureCredential`. `AZURE_CLIENT_ID` + `AZURE_STORAGE_ACCOUNT_NAME` are set on the Container App; the adapters derive blob/queue/table URLs from the account name. Scales 0-5 replicas driven by queue depth (not applied to ingress) as the worker only consumes messages.
 
 **Template lineage:** Managed Environment + Container App shape from AVM [`avm/res/app/managed-environment`](https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/app/managed-environment) and [`avm/res/app/container-app`](https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/app/container-app). The identity-based KEDA `azure-queue` scale rule is hand-written as no first-party Bicep sample assembles it end-to-end, only the ARM reference documents the shape. See [Learn: Scale app — Using managed identity](https://learn.microsoft.com/en-us/azure/container-apps/scale-app#using-managed-identity).
 
@@ -332,7 +332,7 @@ az containerapp show \
 - `registries[0]` has `identity: <uami-resource-id>`, `passwordSecretRef: ""`, `username: ""` (confirms identity-based ACR pull).
 - `ingress: null` (worker has no HTTP surface).
 - `scale.rules[0].azureQueue` includes `accountName`, `queueName`, `queueLength`, and `identity: <uami-resource-id>`.
-- Env vars include `AZURE_STORAGE_CONNECTION_STRING`, `AZURE_CLIENT_ID`, `AZURE_STORAGE_ACCOUNT_NAME`, `AZURE_STORAGE_BLOB_CONTAINER_NAME`, `AZURE_STORAGE_QUEUE_NAME`, `AZURE_STORAGE_TABLE_NAME`, `CONCURRENCY`, `MAX_RETRIES`.
+- Env vars include `AZURE_CLIENT_ID`, `AZURE_STORAGE_ACCOUNT_NAME`, `AZURE_STORAGE_BLOB_CONTAINER_NAME`, `AZURE_STORAGE_QUEUE_NAME`, `AZURE_STORAGE_TABLE_NAME`, `CONCURRENCY`, `MAX_RETRIES`. `AZURE_STORAGE_CONNECTION_STRING` is no longer set — the adapters use `DefaultAzureCredential` keyed off `AZURE_STORAGE_ACCOUNT_NAME`.
 
 ## Application Deployment
 
