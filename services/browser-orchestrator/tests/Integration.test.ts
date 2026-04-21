@@ -47,9 +47,9 @@ describe('Full Worker Integration', () => {
 
     // Initialize Worker with real adapters
     const capture = new PlaywrightAdapter();
-    const metadata = new AzureTableMetadataAdapter(CONNECTION_STRING, TABLE_NAME);
-    const queue = new AzureQueueAdapter<CaptureJob>(CONNECTION_STRING, QUEUE_NAME);
-    const storage = new AzureBlobStorageAdapter(CONNECTION_STRING, BLOB_CONTAINER_NAME);
+    const metadata = AzureTableMetadataAdapter.fromConnectionString(CONNECTION_STRING, TABLE_NAME);
+    const queue = AzureQueueAdapter.fromConnectionString<CaptureJob>(CONNECTION_STRING, QUEUE_NAME);
+    const storage = AzureBlobStorageAdapter.fromConnectionString(CONNECTION_STRING, BLOB_CONTAINER_NAME);
 
     worker = new Worker(capture, metadata, queue, storage);
   });

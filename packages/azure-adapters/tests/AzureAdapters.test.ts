@@ -19,9 +19,9 @@ describe('Azure Adapters (Integration with Azurite)', () => {
   const BLOB_CONTAINER_NAME = 'test-captures';
   const TABLE_NAME = 'TestMetadata';
 
-  const queue = new AzureQueueAdapter<CaptureJob>(CONNECTION_STRING, QUEUE_NAME, 5, CaptureJobSchema);
-  const storage = new AzureBlobStorageAdapter(CONNECTION_STRING, BLOB_CONTAINER_NAME);
-  const metadata = new AzureTableMetadataAdapter(CONNECTION_STRING, TABLE_NAME);
+  const queue = AzureQueueAdapter.fromConnectionString<CaptureJob>(CONNECTION_STRING, QUEUE_NAME, 5, CaptureJobSchema);
+  const storage = AzureBlobStorageAdapter.fromConnectionString(CONNECTION_STRING, BLOB_CONTAINER_NAME);
+  const metadata = AzureTableMetadataAdapter.fromConnectionString(CONNECTION_STRING, TABLE_NAME);
 
   before(async () => {
     // Integration tests require pre-creating resources
@@ -119,6 +119,40 @@ describe('Azure Adapters (Integration with Azurite)', () => {
     it('should return undefined for non-existent job', async () => {
       const state = await metadata.getJobState('non-existent');
       assert.strictEqual(state, undefined);
+    });
+  });
+
+  describe('fromCredential factories (construction smoke)', () => {
+    // Stub TokenCredential — never invoked since we don't make a network call.
+    const stubCredential = {
+      getToken: async () => ({ token: 'stub', expiresOnTimestamp: Date.now() + 60_000 })
+    };
+
+    it('AzureBlobStorageAdapter.fromCredential constructs', () => {
+      const adapter = AzureBlobStorageAdapter.fromCredential(
+        'https://example.blob.core.windows.net',
+        stubCredential,
+        'captures'
+      );
+      assert.ok(adapter);
+    });
+
+    it('AzureQueueAdapter.fromCredential constructs', () => {
+      const adapter = AzureQueueAdapter.fromCredential<CaptureJob>(
+        'https://example.queue.core.windows.net',
+        stubCredential,
+        'jobs'
+      );
+      assert.ok(adapter);
+    });
+
+    it('AzureTableMetadataAdapter.fromCredential constructs', () => {
+      const adapter = AzureTableMetadataAdapter.fromCredential(
+        'https://example.table.core.windows.net',
+        stubCredential,
+        'metadata'
+      );
+      assert.ok(adapter);
     });
   });
 });

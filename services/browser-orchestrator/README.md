@@ -48,11 +48,13 @@ Note: Full platform orchestration (Azurite, API, Docker) has been moved to the p
 
 ## ⚙️ Configuration
 
-The service is configured via environment variables:
+The service is configured via environment variables. Storage auth is mode-switched: if `AZURE_STORAGE_ACCOUNT_NAME` is set the worker uses `DefaultAzureCredential` (deployed posture); otherwise it falls back to `AZURE_STORAGE_CONNECTION_STRING` (local + CI against Azurite).
 
 | Variable                              | Default                        | Description                                                           |
 | :------------------------------------ | :----------------------------- | :-------------------------------------------------------------------- |
-| `AZURE_STORAGE_CONNECTION_STRING`   | `UseDevelopmentStorage=true` | Connection string for Azure Storage.                                  |
+| `AZURE_STORAGE_ACCOUNT_NAME`        | _(unset)_                    | When set, switches storage auth to `DefaultAzureCredential` and derives blob/queue/table URLs from this account name. Set in deployed environments. |
+| `AZURE_CLIENT_ID`                   | _(unset)_                    | UAMI client ID. Required alongside `AZURE_STORAGE_ACCOUNT_NAME` so `DefaultAzureCredential` picks the right managed identity. |
+| `AZURE_STORAGE_CONNECTION_STRING`   | `UseDevelopmentStorage=true` | Connection string for Azure Storage. Used only when `AZURE_STORAGE_ACCOUNT_NAME` is unset (local + CI). |
 | `CONCURRENCY`                       | `2`                          | Number of simultaneous capture jobs per worker instance.              |
 | `MAX_RETRIES`                       | `5`                          | Maximum number of times a job can be dequeued before being discarded. |
 | `AZURE_STORAGE_BLOB_CONTAINER_NAME` | `captures`                   | Destination container for output files.                               |

@@ -59,15 +59,6 @@ param cpu string = '1.0'
 @description('Memory per replica in Gi. Must be 2x the CPU value.')
 param memory string = '2.0Gi'
 
-// Storage reference + connection string composed at deploy time. Temporary
-// while the adapters still read AZURE_STORAGE_CONNECTION_STRING; remove once
-// the adapter migration to DefaultAzureCredential lands.
-resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
-  name: storageAccountName
-}
-
-var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${az.environment().suffixes.storage}'
-
 // Managed Environment
 resource environment 'Microsoft.App/managedEnvironments@2026-01-01' = {
   name: environmentName
@@ -108,12 +99,10 @@ resource containerApp 'Microsoft.App/containerApps@2026-01-01' = {
             memory: memory
           }
           env: [
-            // Connection string for the worker's adapters. To be removed
-            // once the adapters migrate to DefaultAzureCredential.
-            {
-              name: 'AZURE_STORAGE_CONNECTION_STRING'
-              value: storageConnectionString
-            }
+            // Worker adapters authenticate via DefaultAzureCredential against
+            // the UAMI. AZURE_CLIENT_ID disambiguates which UAMI to use;
+            // AZURE_STORAGE_ACCOUNT_NAME triggers the identity branch in
+            // service wiring (which derives blob/queue/table URLs from it).
             {
               name: 'AZURE_CLIENT_ID'
               value: identityClientId

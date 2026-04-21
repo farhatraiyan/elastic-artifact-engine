@@ -42,11 +42,11 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   kind: 'StorageV2'
   properties: {
-    // Temporarily allowing shared-key access so the existing connection-string-based
-    // app code can be smoke-tested against the deployed platform. UAMI still has
-    // full data-plane roles and is used by KEDA, ACR pull, and Flex deployment storage.
-    // Should be flipped to `false` once the adapters migrate to DefaultAzureCredential.
-    allowSharedKeyAccess: true
+    // Identity-only. UAMI handles KEDA queue polling, ACR pull, Flex deployment
+    // storage, the Functions runtime state store (AzureWebJobsStorage__*), and
+    // all app-level Blob/Queue/Table calls via DefaultAzureCredential. No
+    // shared-key consumers remain on the deployed side.
+    allowSharedKeyAccess: false
     allowBlobPublicAccess: false
     minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
