@@ -9,7 +9,8 @@ import { Worker } from './core/Worker.js';
 import { CaptureJob, CaptureJobSchema } from '@capture-automation-platform/shared-types';
 
 async function main() {
-  // Configuration
+  const ACCOUNT_NAME = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+
   const BLOB_CONTAINER_NAME = process.env.AZURE_STORAGE_BLOB_CONTAINER_NAME || 'captures';
   const QUEUE_NAME = process.env.AZURE_STORAGE_QUEUE_NAME || 'jobs';
   const TABLE_NAME = process.env.AZURE_STORAGE_TABLE_NAME || 'metadata';
@@ -17,9 +18,6 @@ async function main() {
   const CONCURRENCY = process.env.CONCURRENCY ? parseInt(process.env.CONCURRENCY) : 2;
   const MAX_RETRIES = process.env.MAX_RETRIES ? parseInt(process.env.MAX_RETRIES) : 5;
 
-  const ACCOUNT_NAME = process.env.AZURE_STORAGE_ACCOUNT_NAME;
-
-  // Adapters
   const capture = new PlaywrightAdapter();
 
   let metadata: AzureTableMetadataAdapter;
@@ -28,10 +26,11 @@ async function main() {
   let storageMode: string;
 
   if (ACCOUNT_NAME) {
-    const credential = new DefaultAzureCredential();
-    const blobUrl  = `https://${ACCOUNT_NAME}.blob.core.windows.net`;
+    const blobUrl = `https://${ACCOUNT_NAME}.blob.core.windows.net`;
     const queueUrl = `https://${ACCOUNT_NAME}.queue.core.windows.net`;
     const tableUrl = `https://${ACCOUNT_NAME}.table.core.windows.net`;
+
+    const credential = new DefaultAzureCredential();
 
     metadata = AzureTableMetadataAdapter.fromCredential(tableUrl, credential, TABLE_NAME);
     queue = AzureQueueAdapter.fromCredential<CaptureJob>(queueUrl, credential, QUEUE_NAME, MAX_RETRIES, CaptureJobSchema);
@@ -46,7 +45,6 @@ async function main() {
     storageMode = connectionString === 'UseDevelopmentStorage=true' ? 'Azurite (Local)' : 'Azure Storage (connection string)';
   }
 
-  // Worker
   const worker = new Worker(capture, metadata, queue, storage);
 
   // eslint-disable-next-line no-console
@@ -54,14 +52,12 @@ async function main() {
   // eslint-disable-next-line no-console
   console.log(`Storage: ${storageMode}`);
 
-  // Start Worker
   worker.start(CONCURRENCY).catch(err => {
     // eslint-disable-next-line no-console
     console.error('[Worker] Failed:', err);
     process.exit(1);
   });
 
-  // Graceful shutdown
   const shutdown = async () => {
     // eslint-disable-next-line no-console
     console.log('\n[Worker] Shutting down...');
