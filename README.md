@@ -72,68 +72,46 @@ The core processing engine is functional and the platform has been deployed end-
 - [X] **Containerization**: Optimized Docker image with Playwright dependencies.
 - [X] **HTTP Ingress (AFA)**: Azure Functions-based entry point for job submission and status polling.
 - [X] **Infrastructure-as-Code**: Bicep modules for identity, storage, ACR, Functions (Flex Consumption), and Container Apps.
-- [X] **Adapter migration to `DefaultAzureCredential`**: deployed storage account is identity-only (`allowSharedKeyAccess: false`). App adapters, Functions runtime state (`AzureWebJobsStorage__*`), KEDA queue polling, ACR pull, and Flex deployment storage all authenticate via the UAMI. Local + CI keep the connection-string path via `fromConnectionString` factories.
+- [X] **Adapter migration to `DefaultAzureCredential`**: deployed storage account is identity-only.
 - [ ] **Web UI**: A modern dashboard for manual job submission and visual result inspection.
 
 ---
 
-## 💻 Getting Started (Local Development)
-
-The platform is designed to be easily testable locally using Azurite for Azure Storage emulation.
+## 💻 Getting Started
 
 ### Prerequisites
+- Node.js v20+
+- Docker
+- Playwright: `npx playwright install chromium`
 
-- **Node.js**: v20+
-- **Docker**: Required for Azurite storage emulation and containerized worker testing.
-- **Playwright Browsers**: `npx playwright install chromium`
-
-### Installation
-
-Due to a temporary peer dependency conflict with TypeScript 6.0 and `@typescript-eslint`, you **must** use the legacy peer deps flag:
+### Setup
 
 ```bash
 npm install --legacy-peer-deps
-```
-
-### Initial Build
-
-Always build the shared types first, as all other services depend on them:
-
-```bash
-# Build everything
 npm run build
 ```
 
 ## 🏃 Running the Platform
 
-The platform is designed to be easily testable locally using Azurite for Azure Storage emulation and **PM2** for background process management.
-
-### 1. Start Infrastructure (Azurite)
+### 1. Infrastructure (Azurite)
 Starts Azurite (via Docker), waits for ports, and automatically initializes the required containers, queues, and tables.
 
 ```bash
 npm run azurite:up
 ```
 
-### 2. Start Background Services
-Launches the Ingress API and the Browser Orchestrator worker in the background using PM2. Requires Azurite to be running.
-
+### 2. Background Services (PM2)
+Requires Azurite.
 ```bash
 npm run start
 ```
 
 ### 3. Submit Jobs (CLI)
-While the platform is running, submit jobs using the dev CLI:
-
 ```bash
 npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- <url> [type]
 ```
 
-Example: `npm run ingress --workspace @capture-automation-platform/browser-orchestrator -- https://example.com pdf`
-
-### 4. Monitor & Logs
-Since services run in the background, use PM2 to monitor them:
-
+### 4. Monitor & Teardown
 ```bash
 # View status of all services
 npx pm2 status
@@ -147,28 +125,16 @@ npm run teardown
 
 ## ☁️ Cloud Deployment
 
-To deploy the platform to your own Azure subscription, see [`infrastructure/README.md`](infrastructure/README.md). It covers:
-
-- Prerequisites (Azure CLI, Docker, `func` CLI, Azure resource provider registration, Flex Consumption region availability)
-- Each Bicep module: what it provisions, how to deploy it, how to verify
-- Application deployment: building and pushing the browser-orchestrator image; staging and publishing the ingress-api
-- Teardown: `az group delete` returns to a clean slate (everything is RG-scoped)
+See [`infrastructure/README.md`](infrastructure/README.md) for Azure deployment instructions (Bicep modules, image publishing, and teardown).
 
 ## 🧪 Testing
 
-The platform uses a decoupled testing strategy where tests run directly against source files using `tsx`.
-
-### 1. Workspace Tests
-Run isolated unit and integration tests for a specific workspace:
-
+### Workspace Tests
 ```bash
-# Run tests for a workspace
 npm test --workspace @capture-automation-platform/azure-adapters
 ```
 
-### 2. Platform Integration Tests
-Runs the full end-to-end integration suite across all services:
-
+### Platform Integration Tests
 ```bash
 npm run test:platform
 ```
