@@ -1,5 +1,3 @@
-// Provenance: see ./README.md
-
 @minLength(5)
 @maxLength(50)
 @description('Globally unique name of the Azure Container Registry.')
@@ -15,8 +13,7 @@ param acrSku string = 'Basic'
 @description('Principal ID of the UAMI granted AcrPull on this registry. Retrieve from identity.bicep outputs. Required so the ACA worker can pull images using the UAMI at cold start.')
 param principalId string
 
-// AcrPull built-in role — Azure-wide immutable constant.
-// az role definition list --name AcrPull --query "[0].name" -o tsv
+// Immutable AcrPull role ID. Verify: az role definition list --name AcrPull --query "[0].name"
 var acrPullRoleDefinitionId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
@@ -30,8 +27,6 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   }
 }
 
-// Grant the UAMI AcrPull scoped to this registry so the Container App can pull the
-// browser-orchestrator image without admin credentials or access keys.
 resource acrPullAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(acr.id, principalId, acrPullRoleDefinitionId)
   scope: acr

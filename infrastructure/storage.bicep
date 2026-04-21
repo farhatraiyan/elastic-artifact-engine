@@ -1,5 +1,3 @@
-// Provenance: see ./README.md
-
 @minLength(3)
 @maxLength(24)
 @description('Globally unique storage account name (3-24 lowercase alphanumeric chars).')
@@ -24,10 +22,8 @@ param queueName string = 'jobs'
 @description('Table name for job metadata.')
 param tableName string = 'metadata'
 
-// Built-in role definition IDs. Each is verifiable in any subscription with:
-// az role definition list --name "<Role Name>" --query "[0].name" -o tsv
-// Blob is Data Owner (not Contributor) because Flex Consumption's identity-based
-// deployment storage requires Owner on the deployment account.
+// Verify IDs via: az role definition list --name "<Role Name>" --query "[0].name" -o tsv
+// Blob is Owner (not Contributor) for Flex Consumption deployment storage requirements.
 var roleDefinitionIds = {
   blobDataOwner: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
   queueDataContributor: '974c5e8b-45b9-4653-ba55-5f855dd0fb88'
@@ -42,19 +38,13 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   kind: 'StorageV2'
   properties: {
-    // Identity-only. UAMI handles KEDA queue polling, ACR pull, Flex deployment
-    // storage, the Functions runtime state store (AzureWebJobsStorage__*), and
-    // all app-level Blob/Queue/Table calls via DefaultAzureCredential. No
-    // shared-key consumers remain on the deployed side.
+    // Hardened for identity-only access (UAMI). Disables connection string usage globally.
     allowSharedKeyAccess: false
     allowBlobPublicAccess: false
     minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
     networkAcls: {
       bypass: 'AzureServices'
-      // RBAC is the real access control, and firewall default stays Allow so
-      // verification works without adding IP rules. Tighten
-      // to 'Deny' + VNet integration in a later iteration.
       defaultAction: 'Allow'
     }
   }
@@ -93,10 +83,7 @@ resource metadataTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2
   name: tableName
 }
 
-// Assign the three Storage data-plane roles to the UAMI at the account scope.
-// The guid() name is deterministic so re-deploys are idempotent. principalType
-// must be ServicePrincipal for UAMIs or the assignment can fail before AAD
-// propagation completes.
+// Deterministic GUIDs ensure idempotent role assignment re-deployments.
 resource dataRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for role in items(roleDefinitionIds): {
   name: guid(storage.id, principalId, role.value)
   scope: storage

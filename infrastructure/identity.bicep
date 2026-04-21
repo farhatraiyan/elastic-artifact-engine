@@ -1,5 +1,3 @@
-// Provenance: see ./README.md
-
 @minLength(3)
 @maxLength(128)
 @description('Name of the user-assigned managed identity.')
