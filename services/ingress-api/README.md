@@ -1,40 +1,34 @@
 # Ingress API (Gateway)
 
-The **Ingress API** is a serverless Azure Functions service that serves as the front door to the Capture Automation Platform. It provides RESTful endpoints for submitting capture jobs and polling for status updates.
+Serverless Azure Functions service acting as the front door to the Capture Automation Platform.
 
-## 🚀 Core Responsibilities
+## 🚀 Capabilities
 
-* **Job Ingestion:** Validates incoming requests and enqueues them for background processing via the `browser-orchestrator`.
-* **State Management:** Initializes job metadata in Azure Table Storage.
-* **Status Polling:** Provides clients with real-time updates on job progression.
-* **Secure Delivery:** Generates short-lived SAS (Shared Access Signature) URLs for secure download of completed capture artifacts.
+* **Job Ingestion:** Validates and enqueues requests (`browser-orchestrator`).
+* **State Management:** Initializes tracking in Azure Table Storage.
+* **Status Polling:** Real-time lookup of job state.
+* **Secure Delivery:** Generates short-lived SAS URLs for secure artifact access.
 
 ## 🏗️ Architecture
 
-The service leverages Azure Functions HTTP triggers for scale-to-zero capabilities and uses the shared `@capture-automation-platform/azure-adapters` package to communicate with the platform's central storage resources.
+Leverages Azure Functions HTTP triggers for scale-to-zero capabilities.
 
-* **`POST /api/capture`**: Validates request parameters and drops a message into the `jobs` queue. Returns a `202 Accepted` with a tracking `jobId`.
-* **`GET /api/status/{jobId}`**: Looks up the job in Table storage. If completed, it generates a SAS URL for the resulting blob.
-* **`GET /api/download/{jobId}`**: Convenience endpoint that looks up a completed job and issues a `302 Redirect` directly to the SAS URL.
+* **`POST /api/capture`**: Enqueues job. Returns `202 Accepted` with `jobId`.
+* **`GET /api/status/{jobId}`**: Table storage lookup. Generates SAS URL if complete.
+* **`GET /api/download/{jobId}`**: Convenience endpoint issuing `302 Redirect` to SAS URL.
 
-## 🛠️ Local Development
+## 🛠️ Commands
 
-Local development is orchestrated from the project root using **PM2** and **Azurite**.
-
-### Commands (Run from Project Root)
+_Execute from workspace root: `npm run <script> --workspace @capture-automation-platform/ingress-api`_
 
 | Command | Description |
 | :--- | :--- |
-| `npm run azurite:up` | Starts Azurite and initializes the metadata table and capture queues. |
-| `npm run start` | Starts the Ingress API and Worker in the background via PM2. |
-| `npm run start:ingress` | Starts only the Ingress API in the background via PM2. |
-| `npm run teardown` | Shuts down the API, worker, and all associated background infrastructure. |
+| `npm run build` | Compiles source. |
+| `npm run bundle` | ESBuild pipeline for function deployment package. |
+| `npm run lint` | Lints source and tests. |
+| `npm test` | Executes workspace tests via `tsx`. |
 
-### Manual Workspace Testing
-You can run the API's unit tests in isolation using `tsx`:
-
-```bash
-# Navigate to the workspace (or use --workspace from root)
-npm test --workspace @capture-automation-platform/ingress-api
-```
-
+_Project Root Commands:_
+* `npm run azurite:up`: Start local emulator.
+* `npm run start:ingress`: PM2 background launch (API only).
+* `npm run start`: PM2 background launch (API + Worker).

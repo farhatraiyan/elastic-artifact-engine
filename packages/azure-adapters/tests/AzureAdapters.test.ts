@@ -24,7 +24,6 @@ describe('Azure Adapters (Integration with Azurite)', () => {
   const metadata = AzureTableMetadataAdapter.fromConnectionString(CONNECTION_STRING, TABLE_NAME);
 
   before(async () => {
-    // Integration tests require pre-creating resources
     const queueClient = new QueueClient(CONNECTION_STRING, QUEUE_NAME);
     const blobService = BlobServiceClient.fromConnectionString(CONNECTION_STRING);
     const tableClient = TableClient.fromConnectionString(CONNECTION_STRING, TABLE_NAME);
@@ -50,7 +49,6 @@ describe('Azure Adapters (Integration with Azurite)', () => {
         retryCount: 0
       };
 
-      // Note: We use the adapter here, but message must exist
       const queueClient = new QueueClient(CONNECTION_STRING, QUEUE_NAME);
       await queueClient.sendMessage(JSON.stringify(job));
 

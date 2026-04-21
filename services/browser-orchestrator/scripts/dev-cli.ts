@@ -31,22 +31,18 @@ async function main() {
   console.log(`   Job ID: ${jobId}`);
   console.log(`   Type:   ${type} ${isRaw ? '(Raw)' : ''}`);
 
-  // 1. Initialise Clients
   const blobContainerClient = BlobServiceClient.fromConnectionString(CONNECTION_STRING).getContainerClient(BLOB_CONTAINER_NAME);
   const queueClient = new QueueClient(CONNECTION_STRING, QUEUE_NAME);
   const tableClient = TableClient.fromConnectionString(CONNECTION_STRING, TABLE_NAME);
 
-  // 2. Ensure resources exist (Shared with worker setup)
   if (CONNECTION_STRING.includes('UseDevelopmentStorage=true')) {
     const { setup } = await import('../../../scripts/setup-azurite.js');
 
     await setup();
   } else {
-    // Production/Azure: Require resources to pre-exist for safety
     console.log('🌐 Using Azure Storage (Cloud)...');
   }
 
-  // 3. Create Table Record and Push to Queue
   console.log('📝 Creating table record and 📨 Pushing to queue...');
 
   const job: CaptureJob = {
@@ -69,7 +65,6 @@ async function main() {
     })
   ]);
 
-  // 5. Polling for Completion
   console.log('⏳ Waiting for worker...');
 
   let entity: JobState | undefined;
@@ -90,7 +85,6 @@ async function main() {
     process.exit(1);
   }
 
-  // 5. Download Result
   console.log('✅ Job completed! Downloading result...');
 
   const filename = `${jobId}.${type}`;

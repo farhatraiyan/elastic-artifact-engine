@@ -9,7 +9,6 @@ import { CaptureHandler } from '../src/functions/CaptureHandler.js';
 import { DownloadHandler } from '../src/functions/DownloadHandler.js';
 import { StatusHandler } from '../src/functions/StatusHandler.js';
 
-// Simple mock for HttpRequest
 function mockRequest(options: { method?: string; body?: unknown; params?: Record<string, string> }): HttpRequest {
   return {
     url: 'http://localhost/api/test',
@@ -27,7 +26,6 @@ function mockRequest(options: { method?: string; body?: unknown; params?: Record
   } as unknown as HttpRequest;
 }
 
-// Simple mock for InvocationContext
 const mockContext = {
   log: () => { },
   error: () => { },
@@ -55,7 +53,7 @@ describe('Ingress API Functions (Unit Tests)', () => {
     const captureHandler = new CaptureHandler(mockMetadata, mockQueue);
     const req = mockRequest({
       method: 'POST',
-      body: { url: 'invalid-url' } // Missing type
+      body: { url: 'invalid-url' }
     });
 
     const res = await captureHandler.handle(req, mockContext);
@@ -96,7 +94,7 @@ describe('Ingress API Functions (Unit Tests)', () => {
 
   test('download should return 400 for missing jobId', async () => {
     const downloadHandler = new DownloadHandler(mockMetadata, mockStorage);
-    const req = mockRequest({ params: {} }); // No jobId provided
+    const req = mockRequest({ params: {} });
 
     const res = await downloadHandler.handle(req, mockContext);
     assert.strictEqual(res.status, 400);

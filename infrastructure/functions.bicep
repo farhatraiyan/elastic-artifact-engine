@@ -1,5 +1,3 @@
-// Provenance: see ./README.md
-
 @description('Function App name. Must be globally unique.')
 param functionAppName string = 'func-${uniqueString(resourceGroup().id)}'
 
@@ -45,9 +43,6 @@ param queueName string = 'jobs'
 @description('Table name for job metadata. Exposed to the app as AZURE_STORAGE_TABLE_NAME.')
 param tableName string = 'metadata'
 
-// Reference the existing storage account (deployed by storage.bicep). Only
-// used for primaryEndpoints.blob in the deployment-storage config below — no
-// listKeys() anywhere: runtime state and adapters authenticate via the UAMI.
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
 }
@@ -57,9 +52,6 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
   name: 'default'
 }
 
-// Deployment container where Flex Consumption uploads the zipped app package.
-// The runtime pulls from it at cold start using the UAMI (Blob Data Owner role,
-// granted by storage.bicep).
 resource deploymentContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobService
   name: deploymentContainerName
@@ -95,6 +87,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: flexPlan.id
     httpsOnly: true
     functionAppConfig: {
+      // Flex Consumption cold-starts by pulling the zip via the attached UAMI.
       deployment: {
         storage: {
           type: 'blobContainer'
@@ -116,11 +109,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     }
     siteConfig: {
       appSettings: [
-        // Identity-based AzureWebJobsStorage. Functions runtime reads blob/queue/
-        // table state via the UAMI (Blob Data Owner + Queue/Table Data Contributor
-        // roles granted in storage.bicep). Replaces the classic shared-key
-        // connection string; with this in place storage.bicep can flip
-        // allowSharedKeyAccess: false.
+        // Replaces classic AzureWebJobsStorage connection string with UAMI auth.
         {
           name: 'AzureWebJobsStorage__accountName'
           value: storageAccountName
@@ -133,10 +122,6 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'AzureWebJobsStorage__clientId'
           value: identityClientId
         }
-        // App-level adapters authenticate via DefaultAzureCredential against
-        // the UAMI. AZURE_CLIENT_ID disambiguates which UAMI to use;
-        // AZURE_STORAGE_ACCOUNT_NAME triggers the identity branch in service
-        // wiring (which derives blob/queue/table URLs from it).
         {
           name: 'AZURE_CLIENT_ID'
           value: identityClientId

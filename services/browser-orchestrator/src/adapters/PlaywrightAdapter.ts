@@ -168,7 +168,6 @@ export class PlaywrightAdapter implements CaptureService {
       strongDelimiter: '**'
     });
 
-    // Use GitHub Flavored Markdown plugin for tables, lists, etc.
     turndownService.use(gfm);
 
     // Rule to trim extra whitespace and newlines inside links (common in card UI designs)
@@ -231,7 +230,6 @@ export class PlaywrightAdapter implements CaptureService {
         await page.addStyleTag({ content: job.options.injectCss });
       }
 
-      // Handle common UI friction
       await this.dismissBanners(page);
       await this.autoScroll(page);
 
@@ -254,7 +252,6 @@ export class PlaywrightAdapter implements CaptureService {
     } catch (error) {
       throw this.mapError(error);
     } finally {
-      // Ensure the entire context is cleaned up
       await context.close();
     }
   }

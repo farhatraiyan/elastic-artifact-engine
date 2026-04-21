@@ -1,6 +1,6 @@
 import { QueueClient } from '@azure/storage-queue';
-import type { TokenCredential } from '@azure/core-auth';
 import { QueueMessage } from '@capture-automation-platform/shared-types';
+import type { TokenCredential } from '@azure/core-auth';
 import { setTimeout } from 'timers/promises';
 
 import { QueueService, Schema } from '../core/interfaces.js';
@@ -24,29 +24,17 @@ export class AzureQueueAdapter<T> implements QueueService<T> {
     this.schema = schema;
   }
 
-  static fromConnectionString<T>(
-    connectionString: string,
-    queueName: string,
-    maxRetries: number = 5,
-    schema?: Schema<T>
-  ): AzureQueueAdapter<T> {
+  static fromConnectionString<T>(connectionString: string, queueName: string, maxRetries: number = 5, schema?: Schema<T>): AzureQueueAdapter<T> {
     return new AzureQueueAdapter<T>(new QueueClient(connectionString, queueName), maxRetries, schema);
   }
 
-  static fromCredential<T>(
-    accountUrl: string,
-    credential: TokenCredential,
-    queueName: string,
-    maxRetries: number = 5,
-    schema?: Schema<T>
-  ): AzureQueueAdapter<T> {
+  static fromCredential<T>(accountUrl: string, credential: TokenCredential, queueName: string, maxRetries: number = 5, schema?: Schema<T>): AzureQueueAdapter<T> {
     return new AzureQueueAdapter<T>(new QueueClient(`${accountUrl}/${queueName}`, credential), maxRetries, schema);
   }
 
   async abandon(message: QueueMessage<T>): Promise<void> {
     if (!message.popReceipt) return;
 
-    // Reset visibility to 0 so it's immediately available for retry
     await this.queueClient.updateMessage(message.id, message.popReceipt, undefined, 0);
   }
 

@@ -31,11 +31,9 @@ export class StatusHandler {
       };
 
       if (state.status === 'Completed' && state.outputUrl) {
-        // If it's a full URL, we extract the filename
         const filename = state.outputUrl.split('/').pop()?.split('?')[0];
 
         if (filename) {
-          // Generate SAS token for direct download (15 mins)
           response.downloadUrl = await this.storage.generateReadSasUrl(filename, 15);
         }
       }

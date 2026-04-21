@@ -28,7 +28,6 @@ describe('Full Worker Integration', () => {
   let blobServiceClient: BlobServiceClient;
 
   before(async () => {
-    // Initialize Azure clients for setup/verification
     queueClient = new QueueClient(CONNECTION_STRING, QUEUE_NAME);
     tableClient = TableClient.fromConnectionString(CONNECTION_STRING, TABLE_NAME);
     blobServiceClient = BlobServiceClient.fromConnectionString(CONNECTION_STRING);
@@ -45,7 +44,6 @@ describe('Full Worker Integration', () => {
       blobServiceClient.getContainerClient(BLOB_CONTAINER_NAME).createIfNotExists()
     ]);
 
-    // Initialize Worker with real adapters
     const capture = new PlaywrightAdapter();
     const metadata = AzureTableMetadataAdapter.fromConnectionString(CONNECTION_STRING, TABLE_NAME);
     const queue = AzureQueueAdapter.fromConnectionString<CaptureJob>(CONNECTION_STRING, QUEUE_NAME);
@@ -70,7 +68,6 @@ describe('Full Worker Integration', () => {
       retryCount: 0
     };
 
-    // 1. Setup initial state in Table
     await tableClient.createEntity({
       partitionKey: 'Jobs',
       rowKey: jobId,
@@ -80,13 +77,10 @@ describe('Full Worker Integration', () => {
       updatedAt: new Date()
     });
 
-    // 2. Send message to Queue
     await queueClient.sendMessage(JSON.stringify(job));
 
-    // 3. Start worker and process
     const workerPromise = worker.start(1);
 
-    // 4. Poll Table for completion (with timeout)
     let status: JobStatus = 'Queued';
     const startTime = Date.now();
     const timeout = 30000; // 30 seconds
@@ -97,11 +91,9 @@ describe('Full Worker Integration', () => {
       status = entity.status as JobStatus;
     }
 
-    // Stop worker after processing
     worker.stop();
     await workerPromise;
 
-    // 5. Verifications
     assert.strictEqual(status, 'Completed', 'Job status should be Completed');
 
     const finalEntity = await tableClient.getEntity('Jobs', jobId);

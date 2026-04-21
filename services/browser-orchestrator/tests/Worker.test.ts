@@ -80,10 +80,8 @@ describe('Worker', () => {
       yield { id: 'm3', body: job3, popReceipt: 'r3' };
     };
 
-    // Concurrency 2
     const startPromise = worker.start(2);
 
-    // Give it time to process
     await new Promise(resolve => setTimeout(resolve, 300));
     worker.stop();
     await startPromise;
@@ -103,10 +101,8 @@ describe('Worker', () => {
     };
     mockQueue.complete = completeStub;
 
-    // We only want to process one job then stop
     const startPromise = worker.start();
 
-    // Give it a moment to process the first job
     await new Promise(resolve => setTimeout(resolve, 200));
     worker.stop();
     await startPromise;
@@ -149,7 +145,6 @@ describe('Worker', () => {
     };
 
     mockCapture.capture = async () => {
-      // Simulate a long-running job
       await new Promise(resolve => setTimeout(resolve, 500));
       return Buffer.from('fake');
     };
@@ -161,7 +156,6 @@ describe('Worker', () => {
 
     const startPromise = worker.start(2);
 
-    // Give it time to pick up the jobs but not finish them
     await new Promise(resolve => setTimeout(resolve, 100));
 
     worker.stop();

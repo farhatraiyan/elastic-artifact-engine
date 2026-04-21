@@ -1,5 +1,3 @@
-// Provenance: see ./README.md
-
 @description('Container App name.')
 param containerAppName string = 'ca-${uniqueString(resourceGroup().id)}'
 
@@ -59,16 +57,12 @@ param cpu string = '1.0'
 @description('Memory per replica in Gi. Must be 2x the CPU value.')
 param memory string = '2.0Gi'
 
-// Managed Environment
 resource environment 'Microsoft.App/managedEnvironments@2026-01-01' = {
   name: environmentName
   location: location
   properties: {}
 }
 
-// Container App with UAMI attached, image pulled from ACR via that UAMI, and
-// KEDA queue-length scaler also authenticated via the same UAMI. No ingress
-// as the worker has no HTTP surface.
 resource containerApp 'Microsoft.App/containerApps@2026-01-01' = {
   name: containerAppName
   location: location
@@ -98,11 +92,8 @@ resource containerApp 'Microsoft.App/containerApps@2026-01-01' = {
             cpu: json(cpu)
             memory: memory
           }
+          // AZURE_CLIENT_ID disambiguates the UAMI for DefaultAzureCredential in the worker adapters.
           env: [
-            // Worker adapters authenticate via DefaultAzureCredential against
-            // the UAMI. AZURE_CLIENT_ID disambiguates which UAMI to use;
-            // AZURE_STORAGE_ACCOUNT_NAME triggers the identity branch in
-            // service wiring (which derives blob/queue/table URLs from it).
             {
               name: 'AZURE_CLIENT_ID'
               value: identityClientId
@@ -137,15 +128,9 @@ resource containerApp 'Microsoft.App/containerApps@2026-01-01' = {
       scale: {
         minReplicas: minReplicas
         maxReplicas: maxReplicas
+        // KEDA azure-queue scaler. Custom type used to support UAMI auth instead of connection strings.
         rules: [
           {
-            // KEDA azure-queue scaler with UAMI auth. We use `custom` (not the
-            // built-in `azureQueue` rule type) because the built-in variant
-            // accepts only connection strings. Deliberately keeping the scaler
-            // identity-based so it stays correct when storage.bicep flips back
-            // to allowSharedKeyAccess: false after the adapter migration.
-            // `identity` is the UAMI resource ID, which needs Storage Queue Data
-            // Reader/Contributor role on the account (granted by storage.bicep).
             name: 'queue-length-scaler'
             custom: {
               type: 'azure-queue'

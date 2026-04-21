@@ -74,7 +74,6 @@ export class Worker {
           break;
         }
 
-        // Wait for a slot if concurrency limit is reached
         while (this.activeMessages.size >= concurrency) {
           await Promise.race(this.activeMessages.keys());
         }

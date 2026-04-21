@@ -24,8 +24,5 @@
     "@azure/identity": {
       "optional": true
     }
-  },
-  "devDependencies": {
-    "typescript": "^6.0.2"
   }
 }
