@@ -72,7 +72,7 @@ The core processing engine is functional and the platform has been deployed end-
 - [X] **Containerization**: Optimized Docker image with Playwright dependencies.
 - [X] **HTTP Ingress (AFA)**: Azure Functions-based entry point for job submission and status polling.
 - [X] **Infrastructure-as-Code**: Bicep modules for identity, storage, ACR, Functions (Flex Consumption), and Container Apps.
-- [X] **Adapter migration to `DefaultAzureCredential`**: deployed posture is identity-only; local + CI keep the connection-string path via `fromConnectionString` factories. Flipping `allowSharedKeyAccess: false` is gated on a follow-up `AzureWebJobsStorage` migration.
+- [X] **Adapter migration to `DefaultAzureCredential`**: deployed storage account is identity-only (`allowSharedKeyAccess: false`). App adapters, Functions runtime state (`AzureWebJobsStorage__*`), KEDA queue polling, ACR pull, and Flex deployment storage all authenticate via the UAMI. Local + CI keep the connection-string path via `fromConnectionString` factories.
 - [ ] **Web UI**: A modern dashboard for manual job submission and visual result inspection.
 
 ---

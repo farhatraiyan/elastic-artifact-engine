@@ -14,7 +14,7 @@ param location string = resourceGroup().location
 param identityId string
 
 @minLength(1)
-@description('Client ID of the UAMI. Exposed to the app as AZURE_CLIENT_ID for DefaultAzureCredential disambiguation once the adapters migrate off connection strings. Currently unused by app code but kept wired for parity with containerapp.bicep.')
+@description('Client ID of the UAMI. Exposed to the app as AZURE_CLIENT_ID for DefaultAzureCredential disambiguation in the ingress-api adapters, and as AzureWebJobsStorage__clientId so the Functions runtime picks the same UAMI for its state-store access.')
 param identityClientId string
 
 @minLength(3)
@@ -45,17 +45,12 @@ param queueName string = 'jobs'
 @description('Table name for job metadata. Exposed to the app as AZURE_STORAGE_TABLE_NAME.')
 param tableName string = 'metadata'
 
-// Reference the existing storage account (deployed by storage.bicep)
+// Reference the existing storage account (deployed by storage.bicep). Only
+// used for primaryEndpoints.blob in the deployment-storage config below — no
+// listKeys() anywhere: runtime state and adapters authenticate via the UAMI.
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
 }
-
-// Connection string composed at deploy time from the account's live keys.
-// Used only for the Functions runtime state store (AzureWebJobsStorage).
-// App-level adapters now use DefaultAzureCredential against the UAMI; remove
-// this var once AzureWebJobsStorage also migrates to identity-based config
-// (AzureWebJobsStorage__accountName + __credential=managedidentity).
-var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
 
 resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = {
   parent: storage
@@ -121,14 +116,22 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     }
     siteConfig: {
       appSettings: [
-        // Classic AzureWebJobsStorage connection string (Functions runtime state).
-        // Still shared-key because Flex Consumption's runtime-state migration to
-        // identity (AzureWebJobsStorage__accountName + __credential=managedidentity)
-        // is tracked separately. The ingress-api adapters themselves use
-        // DefaultAzureCredential via AZURE_STORAGE_ACCOUNT_NAME below.
+        // Identity-based AzureWebJobsStorage. Functions runtime reads blob/queue/
+        // table state via the UAMI (Blob Data Owner + Queue/Table Data Contributor
+        // roles granted in storage.bicep). Replaces the classic shared-key
+        // connection string; with this in place storage.bicep can flip
+        // allowSharedKeyAccess: false.
         {
-          name: 'AzureWebJobsStorage'
-          value: storageConnectionString
+          name: 'AzureWebJobsStorage__accountName'
+          value: storageAccountName
+        }
+        {
+          name: 'AzureWebJobsStorage__credential'
+          value: 'managedidentity'
+        }
+        {
+          name: 'AzureWebJobsStorage__clientId'
+          value: identityClientId
         }
         // App-level adapters authenticate via DefaultAzureCredential against
         // the UAMI. AZURE_CLIENT_ID disambiguates which UAMI to use;

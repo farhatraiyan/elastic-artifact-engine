@@ -42,12 +42,11 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   kind: 'StorageV2'
   properties: {
-    // Shared-key access remains enabled because the Functions runtime state store
-    // (AzureWebJobsStorage in functions.bicep) still uses a connection string.
-    // The app-level adapters have already migrated to DefaultAzureCredential, so
-    // flip to `false` once AzureWebJobsStorage migrates to identity-based config
-    // (AzureWebJobsStorage__accountName + __credential=managedidentity).
-    allowSharedKeyAccess: true
+    // Identity-only. UAMI handles KEDA queue polling, ACR pull, Flex deployment
+    // storage, the Functions runtime state store (AzureWebJobsStorage__*), and
+    // all app-level Blob/Queue/Table calls via DefaultAzureCredential. No
+    // shared-key consumers remain on the deployed side.
+    allowSharedKeyAccess: false
     allowBlobPublicAccess: false
     minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
