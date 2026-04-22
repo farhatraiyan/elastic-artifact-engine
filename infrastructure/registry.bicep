@@ -13,35 +13,28 @@ param acrSku string = 'Basic'
 @description('Principal ID of the UAMI granted AcrPull on this registry. Retrieve from identity.bicep outputs. Required so the ACA worker can pull images using the UAMI at cold start.')
 param principalId string
 
-// Immutable AcrPull role ID. Verify: az role definition list --name AcrPull --query "[0].name"
-var acrPullRoleDefinitionId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
-
-resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: acrName
-  location: location
-  sku: {
-    name: acrSku
-  }
-  properties: {
-    adminUserEnabled: false
-  }
-}
-
-resource acrPullAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(acr.id, principalId, acrPullRoleDefinitionId)
-  scope: acr
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleDefinitionId)
-    principalId: principalId
-    principalType: 'ServicePrincipal'
+module acr 'br/public:avm/res/container-registry/registry:0.12.1' = {
+  name: 'acrDeployment'
+  params: {
+    name: acrName
+    location: location
+    acrSku: acrSku
+    acrAdminUserEnabled: false
+    roleAssignments: [
+      {
+        roleDefinitionIdOrName: '7f951dda-4ed3-4680-a7ca-43fe172d538d' // AcrPull
+        principalId: principalId
+        principalType: 'ServicePrincipal'
+      }
+    ]
   }
 }
 
 @description('Login server (e.g. acrxxx.azurecr.io) for tagging pushed images.')
-output loginServer string = acr.properties.loginServer
+output loginServer string = acr.outputs.loginServer
 
 @description('ACR resource ID.')
-output acrId string = acr.id
+output acrId string = acr.outputs.resourceId
 
 @description('ACR name.')
-output acrName string = acr.name
+output acrName string = acr.outputs.name

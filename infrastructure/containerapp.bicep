@@ -57,98 +57,97 @@ param cpu string = '1.0'
 @description('Memory per replica in Gi. Must be 2x the CPU value.')
 param memory string = '2.0Gi'
 
-resource environment 'Microsoft.App/managedEnvironments@2026-01-01' = {
-  name: environmentName
-  location: location
-  properties: {}
+module environment 'br/public:avm/res/app/managed-environment:0.13.2' = {
+  name: 'environmentDeployment'
+  params: {
+    name: environmentName
+    location: location
+    // AVM defaults to zoneRedundant: true, which requires a custom VNet infrastructure subnet.
+    // Setting it to false allows deploying into the standard managed network.
+    zoneRedundant: false
+  }
 }
 
-resource containerApp 'Microsoft.App/containerApps@2026-01-01' = {
-  name: containerAppName
-  location: location
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${identityId}': {}
-    }
-  }
-  properties: {
-    managedEnvironmentId: environment.id
-    configuration: {
-      activeRevisionsMode: 'Single'
-      registries: [
-        {
-          server: acrLoginServer
-          identity: identityId
-        }
+module containerApp 'br/public:avm/res/app/container-app:0.22.1' = {
+  name: 'containerAppDeployment'
+  params: {
+    name: containerAppName
+    location: location
+    environmentResourceId: environment.outputs.resourceId
+    managedIdentities: {
+      systemAssigned: false
+      userAssignedResourceIds: [
+        identityId
       ]
     }
-    template: {
-      containers: [
-        {
-          name: 'browser-orchestrator'
-          image: containerImage
-          resources: {
-            cpu: json(cpu)
-            memory: memory
-          }
-          // AZURE_CLIENT_ID disambiguates the UAMI for DefaultAzureCredential in the worker adapters.
-          env: [
-            {
-              name: 'AZURE_CLIENT_ID'
-              value: identityClientId
-            }
-            {
-              name: 'AZURE_STORAGE_ACCOUNT_NAME'
-              value: storageAccountName
-            }
-            {
-              name: 'AZURE_STORAGE_BLOB_CONTAINER_NAME'
-              value: blobContainerName
-            }
-            {
-              name: 'AZURE_STORAGE_QUEUE_NAME'
-              value: queueName
-            }
-            {
-              name: 'AZURE_STORAGE_TABLE_NAME'
-              value: tableName
-            }
-            {
-              name: 'CONCURRENCY'
-              value: string(concurrency)
-            }
-            {
-              name: 'MAX_RETRIES'
-              value: string(maxRetries)
-            }
-          ]
+    registries: [
+      {
+        server: acrLoginServer
+        identity: identityId
+      }
+    ]
+    containers: [
+      {
+        name: 'browser-orchestrator'
+        image: containerImage
+        resources: {
+          cpu: json(cpu)
+          memory: memory
         }
-      ]
-      scale: {
-        minReplicas: minReplicas
-        maxReplicas: maxReplicas
-        // KEDA azure-queue scaler. Custom type used to support UAMI auth instead of connection strings.
-        rules: [
+        env: [
           {
-            name: 'queue-length-scaler'
-            custom: {
-              type: 'azure-queue'
-              identity: identityId
-              metadata: {
-                accountName: storageAccountName
-                queueName: queueName
-                queueLength: string(queueLengthPerInstance)
-              }
-            }
+            name: 'AZURE_CLIENT_ID'
+            value: identityClientId
+          }
+          {
+            name: 'AZURE_STORAGE_ACCOUNT_NAME'
+            value: storageAccountName
+          }
+          {
+            name: 'AZURE_STORAGE_BLOB_CONTAINER_NAME'
+            value: blobContainerName
+          }
+          {
+            name: 'AZURE_STORAGE_QUEUE_NAME'
+            value: queueName
+          }
+          {
+            name: 'AZURE_STORAGE_TABLE_NAME'
+            value: tableName
+          }
+          {
+            name: 'CONCURRENCY'
+            value: string(concurrency)
+          }
+          {
+            name: 'MAX_RETRIES'
+            value: string(maxRetries)
           }
         ]
       }
+    ]
+    scaleSettings: {
+      minReplicas: minReplicas
+      maxReplicas: maxReplicas
+      rules: [
+        {
+          name: 'queue-length-scaler'
+          custom: {
+            type: 'azure-queue'
+            identity: identityId
+            metadata: {
+              accountName: storageAccountName
+              queueName: queueName
+              queueLength: string(queueLengthPerInstance)
+            }
+          }
+        }
+      ]
     }
   }
 }
 
-output containerAppName string = containerApp.name
-output containerAppId string = containerApp.id
-output environmentName string = environment.name
-output environmentId string = environment.id
+output containerAppName string = containerApp.outputs.name
+output containerAppId string = containerApp.outputs.resourceId
+output environmentName string = environment.outputs.name
+output environmentId string = environment.outputs.resourceId

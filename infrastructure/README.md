@@ -2,6 +2,8 @@
 
 Bicep modules and deployment commands for the Elastic Artifact Engine.
 
+> **Note:** These templates use [Azure Verified Modules (AVM)](https://azure.github.io/Azure-Verified-Modules/) from the public Bicep registry.
+
 ## Prerequisites
 
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) authenticated (`az login`).
@@ -115,8 +117,6 @@ az deployment group create \
     acrLoginServer=$ACR_LOGIN_SERVER
 ```
 
-> **API version pin:** `Microsoft.App/containerApps@2026-01-01` is required for `identity` on the KEDA `CustomScaleRule`. Older versions fail with `BCP037: property 'identity' is not allowed`.
-
 ## Application Deployment
 
 ### Ingress API
@@ -216,4 +216,3 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 ```bash
 az group delete --name $RG --yes --no-wait
 ```
-

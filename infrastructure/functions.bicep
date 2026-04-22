@@ -43,73 +43,36 @@ param queueName string = 'jobs'
 @description('Table name for job metadata. Exposed to the app as AZURE_STORAGE_TABLE_NAME.')
 param tableName string = 'metadata'
 
-resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
-  name: storageAccountName
-}
-
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = {
-  parent: storage
-  name: 'default'
-}
-
-resource deploymentContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobService
-  name: deploymentContainerName
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
-resource flexPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  name: planName
-  location: location
-  kind: 'functionapp'
-  sku: {
-    name: 'FC1'
-    tier: 'FlexConsumption'
-  }
-  properties: {
+module flexPlan 'br/public:avm/res/web/serverfarm:0.7.0' = {
+  name: 'planDeployment'
+  params: {
+    name: planName
+    location: location
+    skuName: 'FC1'
+    kind: 'functionapp'
     reserved: true
   }
 }
 
-resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
-  name: functionAppName
-  location: location
-  kind: 'functionapp,linux'
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${identityId}': {}
-    }
-  }
-  properties: {
-    serverFarmId: flexPlan.id
+// Ensure the storage dependency URI is fully constructed via standard environment string format
+var storageBlobUri = 'https://${storageAccountName}.blob.${environment().suffixes.storage}'
+
+module functionApp 'br/public:avm/res/web/site:0.22.0' = {
+  name: 'functionAppDeployment'
+  params: {
+    name: functionAppName
+    location: location
+    kind: 'functionapp,linux'
+    serverFarmResourceId: flexPlan.outputs.resourceId
     httpsOnly: true
-    functionAppConfig: {
-      // Flex Consumption cold-starts by pulling the zip via the attached UAMI.
-      deployment: {
-        storage: {
-          type: 'blobContainer'
-          value: '${storage.properties.primaryEndpoints.blob}${deploymentContainerName}'
-          authentication: {
-            type: 'UserAssignedIdentity'
-            userAssignedIdentityResourceId: identityId
-          }
-        }
-      }
-      scaleAndConcurrency: {
-        maximumInstanceCount: maximumInstanceCount
-        instanceMemoryMB: instanceMemoryMB
-      }
-      runtime: {
-        name: 'node'
-        version: '20'
-      }
+    managedIdentities: {
+      systemAssigned: false
+      userAssignedResourceIds: [
+        identityId
+      ]
     }
     siteConfig: {
       appSettings: [
-        // Replaces classic AzureWebJobsStorage connection string with UAMI auth.
         {
           name: 'AzureWebJobsStorage__accountName'
           value: storageAccountName
@@ -144,11 +107,31 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
       ]
     }
+    functionAppConfig: {
+        deployment: {
+          storage: {
+            type: 'blobContainer'
+            value: '${storageBlobUri}/${deploymentContainerName}'
+            authentication: {
+              type: 'UserAssignedIdentity'
+              userAssignedIdentityResourceId: identityId
+            }
+          }
+        }
+        scaleAndConcurrency: {
+          maximumInstanceCount: maximumInstanceCount
+          instanceMemoryMB: instanceMemoryMB
+        }
+        runtime: {
+          name: 'node'
+          version: '20'
+        }
+      }
   }
 }
 
-output functionAppName string = functionApp.name
-output functionAppHostname string = functionApp.properties.defaultHostName
-output functionAppId string = functionApp.id
-output planName string = flexPlan.name
-output deploymentContainerUrl string = '${storage.properties.primaryEndpoints.blob}${deploymentContainerName}'
+output functionAppName string = functionApp.outputs.name
+output functionAppHostname string = functionApp.outputs.defaultHostname
+output functionAppId string = functionApp.outputs.resourceId
+output planName string = flexPlan.outputs.name
+output deploymentContainerUrl string = '${storageBlobUri}/${deploymentContainerName}'

@@ -16,28 +16,21 @@ param principalId string
 @description('Blob container name for rendered artifacts.')
 param blobContainerName string = 'artifacts'
 
+@description('Deployment storage container name. Flex Consumption stores the deployment zip here.')
+param deploymentContainerName string = 'deployment'
+
 @description('Queue name for render jobs.')
 param queueName string = 'jobs'
 
 @description('Table name for job metadata.')
 param tableName string = 'metadata'
 
-// Verify IDs via: az role definition list --name "<Role Name>" --query "[0].name" -o tsv
-// Blob is Owner (not Contributor) for Flex Consumption deployment storage requirements.
-var roleDefinitionIds = {
-  blobDataOwner: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
-  queueDataContributor: '974c5e8b-45b9-4653-ba55-5f855dd0fb88'
-  tableDataContributor: '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'
-}
-
-resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: storageAccountName
-  location: location
-  sku: {
-    name: sku
-  }
-  kind: 'StorageV2'
-  properties: {
+module storage 'br/public:avm/res/storage/storage-account:0.32.0' = {
+  name: 'storageDeployment'
+  params: {
+    name: storageAccountName
+    location: location
+    skuName: sku
     // Hardened for identity-only access (UAMI). Disables connection string usage globally.
     allowSharedKeyAccess: false
     allowBlobPublicAccess: false
@@ -47,55 +40,56 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
       bypass: 'AzureServices'
       defaultAction: 'Allow'
     }
+    // Pass the child resources nativelY
+    blobServices: {
+      containers: [
+        {
+          name: blobContainerName
+          publicAccess: 'None'
+        }
+        {
+          name: deploymentContainerName
+          publicAccess: 'None'
+        }
+      ]
+    }
+    queueServices: {
+      queues: [
+        {
+          name: queueName
+        }
+      ]
+    }
+    tableServices: {
+      tables: [
+        {
+          name: tableName
+        }
+      ]
+    }
+    // AVM handles generating the nested role assignment loops
+    roleAssignments: [
+      {
+        roleDefinitionIdOrName: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b' // Storage Blob Data Owner
+        principalId: principalId
+        principalType: 'ServicePrincipal'
+      }
+      {
+        roleDefinitionIdOrName: '974c5e8b-45b9-4653-ba55-5f855dd0fb88' // Storage Queue Data Contributor
+        principalId: principalId
+        principalType: 'ServicePrincipal'
+      }
+      {
+        roleDefinitionIdOrName: '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3' // Storage Table Data Contributor
+        principalId: principalId
+        principalType: 'ServicePrincipal'
+      }
+    ]
   }
 }
 
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
-  parent: storage
-  name: 'default'
-}
-
-resource artifactContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobService
-  name: blobContainerName
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
-resource queueService 'Microsoft.Storage/storageAccounts/queueServices@2023-05-01' = {
-  parent: storage
-  name: 'default'
-}
-
-resource jobsQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-05-01' = {
-  parent: queueService
-  name: queueName
-}
-
-resource tableService 'Microsoft.Storage/storageAccounts/tableServices@2023-05-01' = {
-  parent: storage
-  name: 'default'
-}
-
-resource metadataTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2023-05-01' = {
-  parent: tableService
-  name: tableName
-}
-
-// Deterministic GUIDs ensure idempotent role assignment re-deployments.
-resource dataRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for role in items(roleDefinitionIds): {
-  name: guid(storage.id, principalId, role.value)
-  scope: storage
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', role.value)
-    principalId: principalId
-    principalType: 'ServicePrincipal'
-  }
-}]
-
-output storageAccountName string = storage.name
-output storageAccountId string = storage.id
-output blobContainerName string = artifactContainer.name
-output queueName string = jobsQueue.name
-output tableName string = metadataTable.name
+output storageAccountName string = storage.outputs.name
+output storageAccountId string = storage.outputs.resourceId
+output blobContainerName string = blobContainerName
+output queueName string = queueName
+output tableName string = tableName
