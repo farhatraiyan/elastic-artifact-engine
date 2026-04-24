@@ -1,6 +1,6 @@
 # Elastic Artifact Engine
 
-Cloud-native browserless web render service for high-scale automation workflows. Leverages containerized Playwright instances to extract intelligent data.
+A cloud-native, asynchronous browserless service for artifact renders, designed for high-scale automation workflows. By leveraging KEDA and an Asynchronous Request-Reply pattern, the platform provides a scale-to-zero infrastructure that gracefully absorbs sudden high-concurrency bursts. This architecture eliminates the thundering herd problem common in resource-intensive cloud browser hosting while maintaining near-zero idle costs.
 
 ## 🏗️ Architecture
 
