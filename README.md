@@ -1,6 +1,6 @@
 # Elastic Artifact Engine
 
-A cloud-native, asynchronous browserless service for artifact renders, designed for high-scale automation workflows. By leveraging KEDA and an Asynchronous Request-Reply pattern, the platform provides a scale-to-zero infrastructure that gracefully absorbs sudden high-concurrency bursts. This architecture eliminates the thundering herd problem common in resource-intensive cloud browser hosting while maintaining near-zero idle costs.
+Standard synchronous browser-rendering services are prone to OOM (Out-Of-Memory) crashes during high-concurrency bursts. This engine is architected to handle artifact rendering asynchronously, designed specifically for high-scale automation workflows. By leveraging KEDA and an Asynchronous Request-Reply pattern, the platform provides a scale-to-zero infrastructure that gracefully absorbs sudden high-concurrency bursts. This architecture eliminates the thundering herd problem common in resource-intensive cloud browser hosting while maintaining near-zero idle costs.
 
 ## 🏗️ Architecture
 
